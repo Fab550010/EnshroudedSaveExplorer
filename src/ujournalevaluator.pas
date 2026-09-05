@@ -1313,6 +1313,17 @@ begin
         Result.ID,
         Result.DirectKnowValue
       );
+
+  if Result.Family = jfQuest then
+     Result.PersonalStatus :=
+                           InferQuestPersonalStatus(
+                                                    Result.RawType,
+                                                    Result.DirectKnowFound,
+                                                    Result.DirectKnowValue
+                                                    )
+  else
+      Result.PersonalStatus := qpsNotCompleted;
+
 end;
 
 
