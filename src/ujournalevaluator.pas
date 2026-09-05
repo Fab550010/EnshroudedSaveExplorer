@@ -35,6 +35,12 @@ type
 
   TJournalEntryStates = array of TJournalEntryState;
 
+  TQuestPersonalStatus = (
+    qpsNotCompleted,
+    qpsCompletedPersonally,
+    qpsResolvedUnknownOrigin
+  );
+
   TJournalQuestState = record
     QuestID: Cardinal;
     Name: string;
@@ -48,6 +54,8 @@ type
     NextUnresolvedIndex: Integer;
 
     Entries: TJournalEntryStates;
+    RawType: string;
+    PersonalStatus: TQuestPersonalStatus;
   end;
 
   type
@@ -139,6 +147,25 @@ function ReadJournalObjectMetadata(
 ): TJournalObjectMetadata;
 
 implementation
+
+
+function InferQuestPersonalStatus(
+  const RawType: string;
+  DirectKnowFound: Boolean;
+  DirectKnowValue: Cardinal
+): TQuestPersonalStatus;
+begin
+  if
+    (not DirectKnowFound) or
+    (DirectKnowValue = 0)
+  then
+    Exit(qpsNotCompleted);
+
+  if SameText(RawType, 'Auto') then
+    Exit(qpsResolvedUnknownOrigin);
+
+  Result := qpsCompletedPersonally;
+end;
 
 
 
@@ -668,6 +695,15 @@ begin
       QuestID,
       Result.DirectKnowValue
     );
+
+  Result.RawType := GetStringField(Quest, 'type');
+
+  Result.PersonalStatus :=
+                        InferQuestPersonalStatus(
+                            Result.RawType,
+                            Result.DirectKnowFound,
+                            Result.DirectKnowValue
+                        );
 
   EntriesNode :=
     Quest.Find('entries');
