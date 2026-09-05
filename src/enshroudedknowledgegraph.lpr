@@ -1505,6 +1505,46 @@ begin
   end;
 end;
 
+procedure RunQuestProgressMode(
+  const JournalFileName: string;
+  const KnowledgeFileName: string
+);
+var
+  JournalRoot: TJSONData;
+  Knowledge: TKnowledgeItems;
+begin
+  JournalRoot := nil;
+
+  try
+    LoadEnglishLocalization;
+
+    JournalRoot :=
+      LoadJsonFile(
+        JournalFileName
+      );
+
+    LoadKnowledgeFile(
+      KnowledgeFileName,
+      Knowledge
+    );
+
+    WriteLn(
+      'KNOW entries: ',
+      Length(Knowledge)
+    );
+
+    WriteLn;
+
+    DumpQuestPersonalProgress(
+      JournalRoot,
+      Knowledge,
+      Localization
+    );
+
+  finally
+    JournalRoot.Free;
+  end;
+end;
 
 procedure RunJournalQuestInventoryMode(
   const JournalFileName: string;
