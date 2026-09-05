@@ -1,4 +1,7 @@
 Ce document est la source de vérité sur les découvertes, hypothèses validées et décisions fonctionnelles. Les fichiers source courants restent la source de vérité sur les signatures, types et implémentations exactes.
+Le dépôt GitHub Fab550010/EnshroudedSaveExplorer est la source de vérité pour le code courant.
+Avant toute modification ou analyse de code, lire les fichiers concernés directement depuis GitHub.
+Ne jamais reconstruire une signature, un type ou une implémentation depuis la mémoire si le fichier courant est accessible dans le dépôt.
 
 # Enshrouded Save Explorer — État des découvertes
 
