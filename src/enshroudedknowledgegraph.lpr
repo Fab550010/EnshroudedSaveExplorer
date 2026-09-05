@@ -1215,6 +1215,12 @@ WriteLn(
 
 WriteLn('  EnshroudedKnowledgeGraph --journal-quests <Journal.json> <QueryDb.json> <know_keys.txt>');
 WriteLn('  EnshroudedKnowledgeGraph --journal-quest-inventory <Journal.json> <know_keys.txt>');
+WriteLn(
+  '  EnshroudedKnowledgeGraph ',
+  '--quest-progress ',
+  '<Journal.json> ',
+  '<know_keys.txt>'
+);
 
 end;
 
@@ -1596,6 +1602,22 @@ var
 
 begin
   try
+
+    if
+  (ParamCount = 3) and
+  SameText(
+    ParamStr(1),
+    '--quest-progress'
+  )
+then
+begin
+  RunQuestProgressMode(
+    ParamStr(2),
+    ParamStr(3)
+  );
+
+  Halt(0);
+end;
 
     if
       (ParamCount = 4) and
