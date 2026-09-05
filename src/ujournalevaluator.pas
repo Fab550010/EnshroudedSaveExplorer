@@ -151,6 +151,12 @@ function QuestPersonalStatusText(
   Status: TQuestPersonalStatus
 ): string;
 
+procedure DumpQuestPersonalProgress(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+
 implementation
 
 
@@ -1381,6 +1387,74 @@ begin
         Localization
       );
   end;
+end;
+
+procedure DumpQuestPersonalProgress(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+var
+  Metadata: TJournalObjectMetadataArray;
+  I: Integer;
+
+  QuestCount: Integer;
+  CompletedPersonallyCount: Integer;
+  NotCompletedCount: Integer;
+  ResolvedUnknownOriginCount: Integer;
+begin
+  CollectJournalMetadata(
+    JournalRoot,
+    Knowledge,
+    Localization,
+    Metadata
+  );
+
+  QuestCount := 0;
+  CompletedPersonallyCount := 0;
+  NotCompletedCount := 0;
+  ResolvedUnknownOriginCount := 0;
+
+  WriteLn('=== QUEST PERSONAL PROGRESS ===');
+  WriteLn;
+
+  for I := 0 to High(Metadata) do
+  begin
+    if Metadata[I].Family <> jfQuest then
+      Continue;
+
+    Inc(QuestCount);
+
+    case Metadata[I].PersonalStatus of
+      qpsCompletedPersonally:
+        Inc(CompletedPersonallyCount);
+
+      qpsNotCompleted:
+        Inc(NotCompletedCount);
+
+      qpsResolvedUnknownOrigin:
+        Inc(ResolvedUnknownOriginCount);
+    end;
+
+    WriteLn(
+      QuestPersonalStatusText(
+        Metadata[I].PersonalStatus
+      ),
+      ' | ',
+      Metadata[I].RawType,
+      ' | ',
+      Metadata[I].Name,
+      ' | $',
+      IntToHex(Metadata[I].ID, 8)
+    );
+  end;
+
+  WriteLn;
+  WriteLn('=== SUMMARY ===');
+  WriteLn('Quest objects                  : ', QuestCount);
+  WriteLn('Personally completed           : ', CompletedPersonallyCount);
+  WriteLn('Not completed personally       : ', NotCompletedCount);
+  WriteLn('Auto resolved / origin unknown : ', ResolvedUnknownOriginCount);
 end;
 
 procedure IncrementStringCount(
