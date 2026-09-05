@@ -71,26 +71,27 @@ type
 
 
    type
-  TJournalObjectMetadata = record
-    ID: Cardinal;
-    Name: string;
+   TJournalObjectMetadata = record
+     ID: Cardinal;
+     Name: string;
 
-    Family: TJournalFamily;
+     Family: TJournalFamily;
 
-    RawType: string;
-    LoreCategory: string;
-    IsTutorial: Boolean;
-    Source: string;
+     RawType: string;
+     LoreCategory: string;
+     IsTutorial: Boolean;
+     Source: string;
 
-    Priority: Integer;
-    UnlockForAllPlayers: Boolean;
-    ReferencedDocumentName: string;
+     Priority: Integer;
+     UnlockForAllPlayers: Boolean;
+     ReferencedDocumentName: string;
 
-    EntryCount: Integer;
+     EntryCount: Integer;
 
-    DirectKnowFound: Boolean;
-    DirectKnowValue: Cardinal;
-  end;
+     DirectKnowFound: Boolean;
+     DirectKnowValue: Cardinal;
+     PersonalStatus: TQuestPersonalStatus;
+   end;
 
   TJournalObjectMetadataArray = array of TJournalObjectMetadata;
 
@@ -145,6 +146,7 @@ function ReadJournalObjectMetadata(
   const Knowledge: TKnowledgeItems;
   const Localization: TLocalizationItems
 ): TJournalObjectMetadata;
+
 
 implementation
 
