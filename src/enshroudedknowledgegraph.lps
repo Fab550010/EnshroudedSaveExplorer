@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="enshroudedknowledgegraph.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="EnshroudedKnowledgeGraph"/>
+        <TopLine Value="1475"/>
+        <CursorPos X="41" Y="1497"/>
+        <UsageCount Value="107"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ulocalization.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uLocalization"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="310"/>
+        <CursorPos X="5" Y="343"/>
+        <UsageCount Value="107"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uknowledge.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uKnowledge"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="96"/>
+        <CursorPos X="31" Y="109"/>
+        <UsageCount Value="102"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uquerymodel.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uQueryModel"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="40"/>
+        <CursorPos X="59" Y="61"/>
+        <UsageCount Value="102"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uqueryevaluator.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uQueryEvaluator"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="337"/>
+        <CursorPos X="5" Y="370"/>
+        <UsageCount Value="102"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ujournalevaluator.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uJournalEvaluator"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="93"/>
+        <CursorPos X="28" Y="126"/>
+        <UsageCount Value="101"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="enshroudedknowledgegraph.lpr"/>
+        <Caret Line="1216" Column="46" TopLine="1189"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1261" Column="93" TopLine="1243"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1276" Column="25" TopLine="1248"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1277" Column="10" TopLine="1249"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1280" Column="25" TopLine="1252"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1289" Column="12" TopLine="1261"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1301" Column="32" TopLine="1273"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1370" Column="35" TopLine="1342"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1384" Column="25" TopLine="1356"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1388" Column="13" TopLine="1360"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1403" Column="20" TopLine="1376"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1408" Column="30" TopLine="1381"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1412" Column="24" TopLine="1385"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1414" Column="15" TopLine="1387"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1419" Column="15" TopLine="1392"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1425" Column="15" TopLine="1398"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1432" Column="17" TopLine="1405"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1439" Column="15" TopLine="1412"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1445" Column="15" TopLine="1418"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1448" Column="16" TopLine="1421"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1452" Column="17" TopLine="1425"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1457" Column="18" TopLine="1430"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1469" Column="15" TopLine="1442"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1474" Column="15" TopLine="1447"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1479" Column="15" TopLine="1452"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1482" Column="16" TopLine="1455"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="1493" Column="20" TopLine="1466"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="66" Column="25" TopLine="49"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="87" Column="64" TopLine="59"/>
+      </Position>
+      <Position>
+        <Filename Value="ujournalevaluator.pas"/>
+        <Caret Line="126" Column="28" TopLine="93"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
