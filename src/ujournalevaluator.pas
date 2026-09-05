@@ -147,6 +147,9 @@ function ReadJournalObjectMetadata(
   const Localization: TLocalizationItems
 ): TJournalObjectMetadata;
 
+function QuestPersonalStatusText(
+  Status: TQuestPersonalStatus
+): string;
 
 implementation
 
@@ -192,6 +195,26 @@ begin
   if Node.JSONType = jtString then
     Result := Node.AsString;
 end;
+
+function QuestPersonalStatusText(
+  Status: TQuestPersonalStatus
+): string;
+begin
+  case Status of
+    qpsNotCompleted:
+      Result := 'NOT_COMPLETED';
+
+    qpsCompletedPersonally:
+      Result := 'COMPLETED_PERSONALLY';
+
+    qpsResolvedUnknownOrigin:
+      Result := 'RESOLVED_UNKNOWN_ORIGIN';
+
+  else
+    Result := 'UNKNOWN';
+  end;
+end;
+
 
 
 function QuestStatusText(
