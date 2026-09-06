@@ -51,6 +51,15 @@ object MainForm: TMainForm
     RowCount = 2
     TabOrder = 1
   end
+  object CharacterComboBox: TComboBox
+    Left = 568
+    Height = 23
+    Top = 8
+    Width = 230
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 2
+  end
   object OpenSaveDialog: TOpenDialog
     Title = 'Select Enshrouded Characters File'
     InitialDir = 'C:\Program Files (x86)\Steam\userdata\161173229\1203620\remote'

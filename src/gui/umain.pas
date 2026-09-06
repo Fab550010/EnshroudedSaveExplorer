@@ -13,12 +13,15 @@ type
   { TMainForm }
 
   TMainForm = class(TForm)
+    CharacterComboBox: TComboBox;
     OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
     QuestGrid: TStringGrid;
     TopPanel: TPanel;
     procedure OpenSaveButtonClick(Sender: TObject);
   private
+    FSaveFileName: string;
+    FOwners: TOwnerIDArray;
 
   public
 
@@ -27,51 +30,43 @@ type
 var
   MainForm: TMainForm;
 
+
 implementation
 
 {$R *.lfm}
 
 { TMainForm }
 
+
+
 procedure TMainForm.OpenSaveButtonClick(Sender: TObject);
 var
-  Owners: TOwnerIDArray;
   Blob: TBytes;
   Knowledge: TKnowledgeItems;
+  I: Integer;
+  Info: string;
 begin
   if not OpenSaveDialog.Execute then
     Exit;
 
   Caption := OpenSaveDialog.FileName;
 
-  Owners :=
-    ListKnowledgeOwners(
-      OpenSaveDialog.FileName
-    );
+  FSaveFileName :=
+  OpenSaveDialog.FileName;
 
-  if Length(Owners) = 0 then
-  begin
-    ShowMessage(
-      'No character with KNOW data found.'
-    );
-    Exit;
-  end;
+FOwners :=
+  ListKnowledgeOwners(
+    FSaveFileName
+  );
 
-  if Length(Owners) > 1 then
-  begin
-    ShowMessage(
-      Format(
-        '%d characters found. Character selection is not implemented yet.',
-        [Length(Owners)]
-      )
-    );
-    Exit;
-  end;
+CharacterComboBox.Clear;
 
+for I := 0 to High(FOwners) do
+begin
   Blob :=
     ExtractKnowledgeBlob(
-      OpenSaveDialog.FileName,
-      Owners[0]
+      FSaveFileName,
+      FOwners[I]
     );
 
   ParseKnowledgeBlob(
@@ -79,16 +74,21 @@ begin
     Knowledge
   );
 
-  ShowMessage(
+  CharacterComboBox.Items.Add(
     Format(
-      'OwnerID: %s'#13#10 +
-      'KNOW entries: %d',
+      '%s (%d KNOW entries)',
       [
-        IntToHex(Owners[0], 8),
+        IntToHex(FOwners[I], 8),
         Length(Knowledge)
       ]
     )
   );
+end;
+
+if CharacterComboBox.Items.Count > 0 then
+  CharacterComboBox.ItemIndex := 0;
+
+
 end;
 
 
