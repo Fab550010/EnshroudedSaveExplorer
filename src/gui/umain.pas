@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Grids;
+  Grids, uKnowledgeBlob, uKnowledge;
 
 type
 
@@ -34,9 +34,32 @@ implementation
 { TMainForm }
 
 procedure TMainForm.OpenSaveButtonClick(Sender: TObject);
+var
+  Blob: TBytes;
+  Knowledge: TKnowledgeItems;
 begin
-     if OpenSaveDialog.Execute then
-    Caption := OpenSaveDialog.FileName;
+  if not OpenSaveDialog.Execute then
+    Exit;
+
+  Caption := OpenSaveDialog.FileName;
+
+  Blob :=
+    ExtractKnowledgeBlob(
+      OpenSaveDialog.FileName,
+      $2AF68BE4
+    );
+
+  ParseKnowledgeBlob(
+    Blob,
+    Knowledge
+  );
+
+  ShowMessage(
+    Format(
+      'KNOW entries: %d',
+      [Length(Knowledge)]
+    )
+  );
 end;
 
 end.
