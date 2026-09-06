@@ -35,6 +35,7 @@ implementation
 
 procedure TMainForm.OpenSaveButtonClick(Sender: TObject);
 var
+  Owners: TOwnerIDArray;
   Blob: TBytes;
   Knowledge: TKnowledgeItems;
 begin
@@ -43,10 +44,34 @@ begin
 
   Caption := OpenSaveDialog.FileName;
 
+  Owners :=
+    ListKnowledgeOwners(
+      OpenSaveDialog.FileName
+    );
+
+  if Length(Owners) = 0 then
+  begin
+    ShowMessage(
+      'No character with KNOW data found.'
+    );
+    Exit;
+  end;
+
+  if Length(Owners) > 1 then
+  begin
+    ShowMessage(
+      Format(
+        '%d characters found. Character selection is not implemented yet.',
+        [Length(Owners)]
+      )
+    );
+    Exit;
+  end;
+
   Blob :=
     ExtractKnowledgeBlob(
       OpenSaveDialog.FileName,
-      $2AF68BE4
+      Owners[0]
     );
 
   ParseKnowledgeBlob(
@@ -56,11 +81,16 @@ begin
 
   ShowMessage(
     Format(
+      'OwnerID: %s'#13#10 +
       'KNOW entries: %d',
-      [Length(Knowledge)]
+      [
+        IntToHex(Owners[0], 8),
+        Length(Knowledge)
+      ]
     )
   );
 end;
+
 
 end.
 
