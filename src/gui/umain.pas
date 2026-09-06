@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Grids, uKnowledgeBlob, uKnowledge;
+  Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator;
 
 type
 
@@ -20,10 +20,11 @@ type
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
+    destructor Destroy; override;
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
-
+    FJournalRoot: TJSONData;
   public
 
   end;
@@ -38,7 +39,11 @@ implementation
 
 { TMainForm }
 
-
+destructor TMainForm.Destroy;
+begin
+  FJournalRoot.Free;
+  inherited Destroy;
+end;
 
 procedure TMainForm.OpenSaveButtonClick(Sender: TObject);
 var
