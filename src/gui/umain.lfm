@@ -1,8 +1,55 @@
 object MainForm: TMainForm
-  Left = 364
-  Height = 240
-  Top = 1124
-  Width = 320
+  Left = 819
+  Height = 565
+  Top = 744
+  Width = 851
   Caption = 'MainForm'
+  ClientHeight = 565
+  ClientWidth = 851
   LCLVersion = '4.8.0.0'
+  OnCreate = FormCreate
+  object TopPanel: TPanel
+    Left = 0
+    Height = 50
+    Top = 0
+    Width = 851
+    Align = alTop
+    Caption = 'TopPanel'
+    ClientHeight = 50
+    ClientWidth = 851
+    TabOrder = 0
+    object OpenSaveButton: TButton
+      Left = 384
+      Height = 25
+      Top = 8
+      Width = 75
+      Caption = 'Open Characters File'
+      TabOrder = 0
+      OnClick = OpenSaveButtonClick
+    end
+  end
+  object QuestGrid: TStringGrid
+    Left = 0
+    Height = 515
+    Top = 50
+    Width = 851
+    Align = alClient
+    ColCount = 4
+    Columns = <    
+      item
+        Title.Caption = 'Name'
+      end    
+      item
+        Title.Caption = 'Type'
+      end    
+      item
+        Title.Caption = 'Status'
+      end    
+      item
+        Title.Caption = 'ID'
+      end>
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 1
+  end
 end
