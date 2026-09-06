@@ -25,9 +25,13 @@ type
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
     FJournalRoot: TJSONData;
+    procedure LoadTestJournal;
   public
 
   end;
+
+const
+  TEST_JOURNAL_FILE = 'E:\EnshroudedSaveExplorer\extracted_data\JournalRegistryResource\33701b26-ec1d-423f-8e06-49f023b91b7f_60b5ed8a_0.json';
 
 var
   MainForm: TMainForm;
@@ -38,6 +42,28 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+
+procedure TMainForm.LoadTestJournal;
+var
+  Stream: TFileStream;
+begin
+  FJournalRoot.Free;
+  FJournalRoot := nil;
+
+  Stream :=
+    TFileStream.Create(
+      TEST_JOURNAL_FILE,
+      fmOpenRead or fmShareDenyNone
+    );
+
+  try
+    FJournalRoot :=
+      GetJSON(Stream);
+  finally
+    Stream.Free;
+  end;
+end;
 
 destructor TMainForm.Destroy;
 begin
@@ -53,6 +79,8 @@ var
 begin
   if not OpenSaveDialog.Execute then
     Exit;
+
+  LoadTestJournal;
 
   Caption := OpenSaveDialog.FileName;
 
