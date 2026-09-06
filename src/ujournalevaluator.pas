@@ -141,6 +141,13 @@ procedure DumpQuestInventory(
   const Localization: TLocalizationItems
 );
 
+procedure CollectJournalMetadata(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems;
+  out Metadata: TJournalObjectMetadataArray
+);
+
 function ReadJournalObjectMetadata(
   Obj: TJSONObject;
   const Knowledge: TKnowledgeItems;
