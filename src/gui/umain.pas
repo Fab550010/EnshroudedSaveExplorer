@@ -18,6 +18,7 @@ type
     OpenSaveButton: TButton;
     QuestGrid: TStringGrid;
     TopPanel: TPanel;
+    procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
   private
     FSaveFileName: string;
@@ -44,7 +45,6 @@ var
   Blob: TBytes;
   Knowledge: TKnowledgeItems;
   I: Integer;
-  Info: string;
 begin
   if not OpenSaveDialog.Execute then
     Exit;
@@ -91,6 +91,45 @@ if CharacterComboBox.Items.Count > 0 then
 
 end;
 
+procedure TMainForm.CharacterComboBoxChange(Sender: TObject);
+var
+  Blob: TBytes;
+  Knowledge: TKnowledgeItems;
+  OwnerID: Cardinal;
+begin
+  if CharacterComboBox.ItemIndex < 0 then
+    Exit;
+
+  if CharacterComboBox.ItemIndex > High(FOwners) then
+    Exit;
+
+  OwnerID :=
+    FOwners[
+      CharacterComboBox.ItemIndex
+    ];
+
+  Blob :=
+    ExtractKnowledgeBlob(
+      FSaveFileName,
+      OwnerID
+    );
+
+  ParseKnowledgeBlob(
+    Blob,
+    Knowledge
+  );
+
+  ShowMessage(
+    Format(
+      'OwnerID: %s'#13#10 +
+      'KNOW entries: %d',
+      [
+        IntToHex(OwnerID, 8),
+        Length(Knowledge)
+      ]
+    )
+  );
+end;
 
 end.
 

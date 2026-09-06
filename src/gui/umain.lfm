@@ -59,6 +59,7 @@ object MainForm: TMainForm
     ItemHeight = 15
     Style = csDropDownList
     TabOrder = 2
+    OnChange = CharacterComboBoxChange
   end
   object OpenSaveDialog: TOpenDialog
     Title = 'Select Enshrouded Characters File'
