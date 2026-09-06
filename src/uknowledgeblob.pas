@@ -9,10 +9,12 @@ uses
   Classes,
   uZstd;
 
-function ExtractKnowledgeBlob(
-  const FileName: string;
-  OwnerID: Cardinal
-): TBytes;
+type
+    TOwnerIDArray = array of Cardinal;
+
+function ListKnowledgeOwners(const FileName: string): TOwnerIDArray;
+
+function ExtractKnowledgeBlob(const FileName: string; OwnerID: Cardinal): TBytes;
 
 
 
@@ -33,7 +35,7 @@ type
 
   TKSCBlobEntryArray = array of TKSCBlobEntry;
 
-function IsKSC1(
+  function IsKSC1(
   const Header: TKSCHeader
 ): Boolean;
 begin
@@ -54,6 +56,80 @@ begin
     (Ord(T[2]) = $D5) and
     (Ord(T[3]) = $F0);
 end;
+
+
+  function ListKnowledgeOwners(
+    const FileName: string
+  ): TOwnerIDArray;
+  var
+    F: TFileStream;
+    Header: TKSCHeader;
+    Entry: TKSCBlobEntry;
+    I: Integer;
+    J: Integer;
+    AlreadyPresent: Boolean;
+  begin
+    SetLength(Result, 0);
+
+    F := TFileStream.Create(
+      FileName,
+      fmOpenRead or fmShareDenyNone
+    );
+
+    try
+      if F.Size < SizeOf(TKSCHeader) then
+        raise Exception.Create(
+          'File too small'
+        );
+
+      F.ReadBuffer(
+        Header,
+        SizeOf(Header)
+      );
+
+      if not IsKSC1(Header) then
+        raise Exception.Create(
+          'Not a KSC1 file'
+        );
+
+      for I := 0 to Header.BlobCount - 1 do
+      begin
+        F.ReadBuffer(
+          Entry,
+          SizeOf(Entry)
+        );
+
+        if not IsKnowBlob(
+          Entry.BlobType
+        ) then
+          Continue;
+
+        AlreadyPresent := False;
+
+        for J := 0 to High(Result) do
+          if Result[J] = Entry.OwnerID then
+          begin
+            AlreadyPresent := True;
+            Break;
+          end;
+
+        if AlreadyPresent then
+          Continue;
+
+        SetLength(
+          Result,
+          Length(Result) + 1
+        );
+
+        Result[High(Result)] :=
+          Entry.OwnerID;
+      end;
+
+    finally
+      F.Free;
+    end;
+  end;
+
 
 function ExtractKnowledgeBlob(
   const FileName: string;
