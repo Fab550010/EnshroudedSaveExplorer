@@ -14,6 +14,8 @@ function ExtractKnowledgeBlob(
   OwnerID: Cardinal
 ): TBytes;
 
+
+
 implementation
 
 type

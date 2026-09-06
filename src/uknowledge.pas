@@ -27,6 +27,11 @@ function FindKnowledgeValue(
   out Value: Cardinal
 ): Boolean;
 
+procedure ParseKnowledgeBlob(
+  const Data: TBytes;
+  out Items: TKnowledgeItems
+);
+
 implementation
 
 procedure LoadKnowledgeFile(
@@ -125,6 +130,84 @@ begin
   end;
 
   Result := False;
+end;
+
+type
+  TKnowledgeHeader = packed record
+    Version: LongWord;
+    Unknown1: LongWord;
+    EntryCount: LongWord;
+  end;
+
+procedure ParseKnowledgeBlob(
+  const Data: TBytes;
+  out Items: TKnowledgeItems
+);
+var
+  Header: TKnowledgeHeader;
+  ExpectedSize: Int64;
+  IDsOffset: Int64;
+  ValuesOffset: Int64;
+  I: LongWord;
+begin
+  SetLength(Items, 0);
+
+  if Length(Data) < SizeOf(TKnowledgeHeader) then
+    raise Exception.Create(
+      'KNOW blob too small'
+    );
+
+  Move(
+    Data[0],
+    Header,
+    SizeOf(Header)
+  );
+
+  ExpectedSize :=
+    SizeOf(TKnowledgeHeader) +
+    Int64(Header.EntryCount) * 8;
+
+  if Length(Data) <> ExpectedSize then
+    raise Exception.CreateFmt(
+      'Unexpected KNOW size: got %d, expected %d',
+      [
+        Length(Data),
+        ExpectedSize
+      ]
+    );
+
+  SetLength(
+    Items,
+    Header.EntryCount
+  );
+
+  IDsOffset :=
+    SizeOf(TKnowledgeHeader);
+
+  ValuesOffset :=
+    IDsOffset +
+    Int64(Header.EntryCount) * 4;
+
+  for I := 0 to Header.EntryCount - 1 do
+  begin
+    Move(
+      Data[
+        IDsOffset +
+        Int64(I) * 4
+      ],
+      Items[I].ID,
+      SizeOf(Cardinal)
+    );
+
+    Move(
+      Data[
+        ValuesOffset +
+        Int64(I) * 4
+      ],
+      Items[I].Value,
+      SizeOf(Cardinal)
+    );
+  end;
 end;
 
 end.
