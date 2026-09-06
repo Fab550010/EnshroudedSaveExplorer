@@ -7,7 +7,6 @@ object MainForm: TMainForm
   ClientHeight = 565
   ClientWidth = 851
   LCLVersion = '4.8.0.0'
-  OnCreate = FormCreate
   object TopPanel: TPanel
     Left = 0
     Height = 50
@@ -25,7 +24,6 @@ object MainForm: TMainForm
       Width = 75
       Caption = 'Open Characters File'
       TabOrder = 0
-      OnClick = OpenSaveButtonClick
     end
   end
   object QuestGrid: TStringGrid

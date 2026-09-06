@@ -5,7 +5,7 @@ unit umain;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
+  Classes, SysUtils, Form, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
   Grids;
 
 type
