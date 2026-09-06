@@ -5,7 +5,7 @@ unit umain;
 interface
 
 uses
-  Classes, SysUtils, Form, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
   Grids;
 
 type
@@ -13,9 +13,11 @@ type
   { TMainForm }
 
   TMainForm = class(TForm)
+    OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
     QuestGrid: TStringGrid;
     TopPanel: TPanel;
+    procedure OpenSaveButtonClick(Sender: TObject);
   private
 
   public
@@ -28,6 +30,14 @@ var
 implementation
 
 {$R *.lfm}
+
+{ TMainForm }
+
+procedure TMainForm.OpenSaveButtonClick(Sender: TObject);
+begin
+     if OpenSaveDialog.Execute then
+    Caption := OpenSaveDialog.FileName;
+end;
 
 end.
 

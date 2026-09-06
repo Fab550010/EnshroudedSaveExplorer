@@ -21,9 +21,10 @@ object MainForm: TMainForm
       Left = 384
       Height = 25
       Top = 8
-      Width = 75
+      Width = 128
       Caption = 'Open Characters File'
       TabOrder = 0
+      OnClick = OpenSaveButtonClick
     end
   end
   object QuestGrid: TStringGrid
@@ -49,5 +50,11 @@ object MainForm: TMainForm
     FixedCols = 0
     RowCount = 2
     TabOrder = 1
+  end
+  object OpenSaveDialog: TOpenDialog
+    Title = 'Select Enshrouded Characters File'
+    InitialDir = 'C:\Program Files (x86)\Steam\userdata\161173229\1203620\remote'
+    Left = 16
+    Top = 16
   end
 end
