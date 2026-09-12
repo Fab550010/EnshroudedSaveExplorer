@@ -9,12 +9,12 @@ object MainForm: TMainForm
   LCLVersion = '4.8.0.0'
   object TopPanel: TPanel
     Left = 0
-    Height = 50
+    Height = 80
     Top = 0
     Width = 851
     Align = alTop
     Caption = 'TopPanel'
-    ClientHeight = 50
+    ClientHeight = 80
     ClientWidth = 851
     TabOrder = 0
     object OpenSaveButton: TButton
@@ -33,11 +33,57 @@ object MainForm: TMainForm
       Width = 87
       Caption = 'No quest loaded'
     end
+    object QuestTypeFilterCombobox: TComboBox
+      Left = 392
+      Height = 23
+      Top = 32
+      Width = 100
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        'All types'
+        'Auto'
+        'PlayerQuest'
+        'WorldQuest'
+      )
+      Style = csDropDownList
+      TabOrder = 1
+      Text = 'All types'
+      OnChange = QuestFilterChange
+    end
+    object CharacterComboBox: TComboBox
+      Left = 568
+      Height = 23
+      Top = 8
+      Width = 230
+      ItemHeight = 15
+      Style = csDropDownList
+      TabOrder = 2
+      OnChange = CharacterComboBoxChange
+    end
+    object QuestStatusFilterComboBox: TComboBox
+      Left = 392
+      Height = 23
+      Top = 56
+      Width = 100
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        'All statuses'
+        'Not completed'
+        'Completed personally'
+        'Resolved - origin unknown'
+      )
+      Style = csDropDownList
+      TabOrder = 3
+      Text = 'All statuses'
+      OnChange = QuestFilterChange
+    end
   end
   object QuestGrid: TStringGrid
     Left = 0
-    Height = 515
-    Top = 50
+    Height = 485
+    Top = 80
     Width = 851
     Align = alClient
     ColCount = 4
@@ -55,19 +101,9 @@ object MainForm: TMainForm
         Title.Caption = 'ID'
       end>
     FixedCols = 0
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goSmoothScroll]
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goColMoving, goDblClickAutoSize, goSmoothScroll]
     RowCount = 2
     TabOrder = 1
-  end
-  object CharacterComboBox: TComboBox
-    Left = 568
-    Height = 23
-    Top = 8
-    Width = 230
-    ItemHeight = 15
-    Style = csDropDownList
-    TabOrder = 2
-    OnChange = CharacterComboBoxChange
   end
   object OpenSaveDialog: TOpenDialog
     Title = 'Select Enshrouded Characters File'

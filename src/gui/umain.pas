@@ -15,6 +15,8 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    QuestStatusFilterComboBox: TComboBox;
+    QuestTypeFilterCombobox: TComboBox;
     QuestSummaryLabel: TLabel;
     OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
@@ -22,14 +24,17 @@ type
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
+    procedure QuestFilterChange(Sender: TObject);
+    procedure QuestTypeFilterComboboxChange(Sender: TObject);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
     FJournalRoot: TJSONData;
     FLocalization: TLocalizationItems;
+    FKnowledge: TKnowledgeItems;
     procedure LoadTestJournal;
     procedure LoadTestLocalization;
-    procedure PopulateQuestGrid(const Knowledge: TKnowledgeItems);
+    procedure PopulateQuestGrid;
   public
     destructor Destroy; override;
   end;
@@ -86,9 +91,7 @@ begin
     );
 end;
 
-procedure TMainForm.PopulateQuestGrid(
-  const Knowledge: TKnowledgeItems
-);
+procedure TMainForm.PopulateQuestGrid();
 var
   Metadata: TJournalObjectMetadataArray;
   I: Integer;
@@ -109,7 +112,7 @@ var
 begin
   CollectJournalMetadata(
     FJournalRoot,
-    Knowledge,
+    FKnowledge,
     FLocalization,
     Metadata
   );
@@ -135,6 +138,19 @@ begin
     begin
       if Metadata[I].Family <> jfQuest then
         Continue;
+      case QuestTypeFilterComboBox.ItemIndex of
+           1:
+             if not SameText(Metadata[I].RawType, 'Auto') then
+                Continue;
+
+           2:
+             if not SameText(Metadata[I].RawType, 'PlayerQuest') then
+                Continue;
+
+           3:
+             if not SameText(Metadata[I].RawType, 'WorldQuest') then
+                Continue;
+      end;
 
       Inc(QuestCount);
       if SameText(Metadata[I].RawType, 'PlayerQuest') then
@@ -273,10 +289,19 @@ begin
     QuestGrid.RowCount := 1;
 end;
 
+procedure TMainForm.QuestFilterChange(Sender: TObject);
+begin
+
+end;
+
+procedure TMainForm.QuestFilterChange(Sender: TObject);
+begin
+
+end;
+
 procedure TMainForm.CharacterComboBoxChange(Sender: TObject);
 var
   Blob: TBytes;
-  Knowledge: TKnowledgeItems;
   OwnerID: Cardinal;
 begin
   if CharacterComboBox.ItemIndex < 0 then
@@ -298,10 +323,10 @@ begin
 
   ParseKnowledgeBlob(
     Blob,
-    Knowledge
+    FKnowledge
   );
 
-  PopulateQuestGrid(Knowledge);
+  PopulateQuestGrid;
 end;
 
 end.
