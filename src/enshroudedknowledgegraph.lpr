@@ -1464,6 +1464,12 @@ begin
       Localization
     );
 
+    DumpLoreProgress(
+                     JournalRoot,
+                     Knowledge,
+                     Localization
+                     );
+
   finally
     JournalRoot.Free;
   end;
@@ -1589,19 +1595,11 @@ begin
     );
     WriteLn;
 
-    writeln('***********yo**************');
-
-    DumpQuestInventory(
+        DumpQuestInventory(
       JournalRoot,
       Knowledge,
       Localization
     );
-
-    DumpLoreProgress(
-                     JournalRoot,
-                     Knowledge,
-                     Localization
-                     );
 
   finally
     JournalRoot.Free;

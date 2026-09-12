@@ -80,31 +80,76 @@ object MainForm: TMainForm
       OnChange = QuestFilterChange
     end
   end
-  object QuestGrid: TStringGrid
+  object MainPageControl: TPageControl
     Left = 0
     Height = 485
     Top = 80
     Width = 851
+    ActivePage = QuestTabSheet
     Align = alClient
-    ColCount = 4
-    Columns = <    
-      item
-        Title.Caption = 'Name'
-      end    
-      item
-        Title.Caption = 'Type'
-      end    
-      item
-        Title.Caption = 'Status'
-      end    
-      item
-        Title.Caption = 'ID'
-      end>
-    FixedCols = 0
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goColMoving, goDblClickAutoSize, goSmoothScroll]
-    RowCount = 2
+    TabIndex = 0
     TabOrder = 1
-    OnHeaderClick = QuestGridHeaderClick
+    object QuestTabSheet: TTabSheet
+      Caption = 'Quests'
+      ClientHeight = 457
+      ClientWidth = 843
+      object QuestGrid: TStringGrid
+        Left = 0
+        Height = 457
+        Top = 0
+        Width = 843
+        Align = alClient
+        ColCount = 4
+        Columns = <        
+          item
+            Title.Caption = 'Name'
+          end        
+          item
+            Title.Caption = 'Type'
+          end        
+          item
+            Title.Caption = 'Status'
+          end        
+          item
+            Title.Caption = 'ID'
+          end>
+        FixedCols = 0
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goColMoving, goDblClickAutoSize, goSmoothScroll]
+        RowCount = 2
+        TabOrder = 0
+        OnHeaderClick = QuestGridHeaderClick
+      end
+    end
+    object LoreTabSheet: TTabSheet
+      Caption = 'Lore'
+      ClientHeight = 457
+      ClientWidth = 843
+      object LoreGrid: TStringGrid
+        Left = 0
+        Height = 457
+        Top = 0
+        Width = 843
+        Align = alClient
+        ColCount = 4
+        Columns = <        
+          item
+            Title.Caption = 'Name'
+          end        
+          item
+            Title.Caption = 'Progress'
+          end        
+          item
+            Title.Caption = 'Status'
+          end        
+          item
+            Title.Caption = 'ID'
+          end>
+        FixedCols = 0
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goColMoving, goDblClickAutoSize, goSmoothScroll, goRowHighlight]
+        RowCount = 1
+        TabOrder = 0
+      end
+    end
   end
   object OpenSaveDialog: TOpenDialog
     Title = 'Select Enshrouded Characters File'

@@ -5,7 +5,7 @@ unit umain;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
   Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator,
   uLocalization;
 
@@ -15,12 +15,16 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    MainPageControl: TPageControl;
     QuestStatusFilterComboBox: TComboBox;
     QuestTypeFilterCombobox: TComboBox;
     QuestSummaryLabel: TLabel;
     OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
     QuestGrid: TStringGrid;
+    QuestTabSheet: TTabSheet;
+    LoreTabSheet: TTabSheet;
+    LoreGrid: TStringGrid;
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
