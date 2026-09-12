@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator;
+  Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator,
+  uLocalization;
 
 type
 
@@ -25,13 +26,18 @@ type
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
     FJournalRoot: TJSONData;
+    FLocalization: TLocalizationItems;
     procedure LoadTestJournal;
+    procedure LoadTestLocalization;
+    procedure PopulateQuestGrid(const Knowledge: TKnowledgeItems);
   public
 
   end;
 
 const
   TEST_JOURNAL_FILE = 'E:\EnshroudedSaveExplorer\extracted_data\JournalRegistryResource\33701b26-ec1d-423f-8e06-49f023b91b7f_60b5ed8a_0.json';
+  TEST_LOCALIZATION_FILE = 'E:\SteamLibrary\steamapps\common\Enshrouded\enshrouded_016.dat';
+  TEST_LOCALIZATION_SEED = $3F95ABE0;
 
 var
   MainForm: TMainForm;
@@ -65,6 +71,62 @@ begin
   end;
 end;
 
+procedure TMainForm.LoadTestLocalization;
+begin
+  SetLength(FLocalization, 0);
+
+  if not LoadLocalizationTable(
+           TEST_LOCALIZATION_FILE,
+           TEST_LOCALIZATION_SEED,
+           FLocalization
+         ) then
+    raise Exception.CreateFmt(
+      'Unable to load localization table from %s',
+      [TEST_LOCALIZATION_FILE]
+    );
+end;
+
+procedure TMainForm.PopulateQuestGrid(
+  const Knowledge: TKnowledgeItems
+);
+var
+  Metadata: TJournalObjectMetadataArray;
+  I: Integer;
+  Row: Integer;
+begin
+  CollectJournalMetadata(
+    FJournalRoot,
+    Knowledge,
+    FLocalization,
+    Metadata
+  );
+
+  QuestGrid.BeginUpdate;
+  try
+    QuestGrid.RowCount := 1;
+    Row := 1;
+
+    for I := 0 to High(Metadata) do
+    begin
+      if Metadata[I].Family <> jfQuest then
+        Continue;
+
+      QuestGrid.RowCount := Row + 1;
+
+      QuestGrid.Cells[0, Row] := Metadata[I].Name;
+      QuestGrid.Cells[1, Row] := Metadata[I].RawType;
+      QuestGrid.Cells[2, Row] :=
+        QuestPersonalStatusText(Metadata[I].PersonalStatus);
+      QuestGrid.Cells[3, Row] :=
+        '$' + IntToHex(Metadata[I].ID, 8);
+
+      Inc(Row);
+    end;
+  finally
+    QuestGrid.EndUpdate;
+  end;
+end;
+
 destructor TMainForm.Destroy;
 begin
   FJournalRoot.Free;
@@ -81,47 +143,51 @@ begin
     Exit;
 
   LoadTestJournal;
+  LoadTestLocalization;
 
   Caption := OpenSaveDialog.FileName;
 
   FSaveFileName :=
-  OpenSaveDialog.FileName;
+    OpenSaveDialog.FileName;
 
-FOwners :=
-  ListKnowledgeOwners(
-    FSaveFileName
-  );
-
-CharacterComboBox.Clear;
-
-for I := 0 to High(FOwners) do
-begin
-  Blob :=
-    ExtractKnowledgeBlob(
-      FSaveFileName,
-      FOwners[I]
+  FOwners :=
+    ListKnowledgeOwners(
+      FSaveFileName
     );
 
-  ParseKnowledgeBlob(
-    Blob,
-    Knowledge
-  );
+  CharacterComboBox.Clear;
 
-  CharacterComboBox.Items.Add(
-    Format(
-      '%s (%d KNOW entries)',
-      [
-        IntToHex(FOwners[I], 8),
-        Length(Knowledge)
-      ]
-    )
-  );
-end;
+  for I := 0 to High(FOwners) do
+  begin
+    Blob :=
+      ExtractKnowledgeBlob(
+        FSaveFileName,
+        FOwners[I]
+      );
 
-if CharacterComboBox.Items.Count > 0 then
-  CharacterComboBox.ItemIndex := 0;
+    ParseKnowledgeBlob(
+      Blob,
+      Knowledge
+    );
 
+    CharacterComboBox.Items.Add(
+      Format(
+        '%s (%d KNOW entries)',
+        [
+          IntToHex(FOwners[I], 8),
+          Length(Knowledge)
+        ]
+      )
+    );
+  end;
 
+  if CharacterComboBox.Items.Count > 0 then
+  begin
+    CharacterComboBox.ItemIndex := 0;
+    CharacterComboBoxChange(CharacterComboBox);
+  end
+  else
+    QuestGrid.RowCount := 1;
 end;
 
 procedure TMainForm.CharacterComboBoxChange(Sender: TObject);
@@ -152,17 +218,7 @@ begin
     Knowledge
   );
 
-  ShowMessage(
-    Format(
-      'OwnerID: %s'#13#10 +
-      'KNOW entries: %d',
-      [
-        IntToHex(OwnerID, 8),
-        Length(Knowledge)
-      ]
-    )
-  );
+  PopulateQuestGrid(Knowledge);
 end;
 
 end.
-
