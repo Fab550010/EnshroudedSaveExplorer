@@ -93,6 +93,7 @@ var
   Metadata: TJournalObjectMetadataArray;
   I: Integer;
   Row: Integer;
+  StatusText: string;
 begin
   CollectJournalMetadata(
     FJournalRoot,
@@ -111,12 +112,24 @@ begin
       if Metadata[I].Family <> jfQuest then
         Continue;
 
+      case Metadata[I].PersonalStatus of
+        qpsNotCompleted:
+          StatusText := 'Not completed';
+
+        qpsCompletedPersonally:
+          StatusText := 'Completed personally';
+
+        qpsResolvedUnknownOrigin:
+          StatusText := 'Resolved - origin unknown';
+      else
+        StatusText := 'Unknown';
+      end;
+
       QuestGrid.RowCount := Row + 1;
 
       QuestGrid.Cells[0, Row] := Metadata[I].Name;
       QuestGrid.Cells[1, Row] := Metadata[I].RawType;
-      QuestGrid.Cells[2, Row] :=
-        QuestPersonalStatusText(Metadata[I].PersonalStatus);
+      QuestGrid.Cells[2, Row] := StatusText;
       QuestGrid.Cells[3, Row] :=
         '$' + IntToHex(Metadata[I].ID, 8);
 
