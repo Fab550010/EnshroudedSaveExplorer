@@ -98,6 +98,14 @@ var
   CompletedCount: Integer;
   NotCompletedCount: Integer;
   ResolvedUnknownCount: Integer;
+  PlayerQuestCount: Integer;
+  PlayerQuestCompletedCount: Integer;
+
+  WorldQuestCount: Integer;
+  WorldQuestCompletedCount: Integer;
+
+  AutoQuestCount: Integer;
+  AutoQuestResolvedCount: Integer;
 begin
   CollectJournalMetadata(
     FJournalRoot,
@@ -114,6 +122,14 @@ begin
     CompletedCount := 0;
     NotCompletedCount := 0;
     ResolvedUnknownCount := 0;
+    PlayerQuestCount := 0;
+    PlayerQuestCompletedCount := 0;
+
+    WorldQuestCount := 0;
+    WorldQuestCompletedCount := 0;
+
+    AutoQuestCount := 0;
+    AutoQuestResolvedCount := 0;
 
     for I := 0 to High(Metadata) do
     begin
@@ -121,6 +137,27 @@ begin
         Continue;
 
       Inc(QuestCount);
+      if SameText(Metadata[I].RawType, 'PlayerQuest') then
+         begin
+              Inc(PlayerQuestCount);
+
+              if Metadata[I].PersonalStatus = qpsCompletedPersonally then
+                 Inc(PlayerQuestCompletedCount);
+         end
+      else if SameText(Metadata[I].RawType, 'WorldQuest') then
+         begin
+              Inc(WorldQuestCount);
+
+              if Metadata[I].PersonalStatus = qpsCompletedPersonally then
+                 Inc(WorldQuestCompletedCount);
+         end
+      else if SameText(Metadata[I].RawType, 'Auto') then
+           begin
+                Inc(AutoQuestCount);
+
+                if Metadata[I].PersonalStatus = qpsResolvedUnknownOrigin then
+                   Inc(AutoQuestResolvedCount);
+           end;
 
       case Metadata[I].PersonalStatus of
         qpsCompletedPersonally:
@@ -157,15 +194,17 @@ begin
       Inc(Row);
     end;
     QuestSummaryLabel.Caption :=
-      Format(
-          '%d quests - %d completed personally - %d resolved unknown - %d not completed',
-              [
-                    QuestCount,
-                    CompletedCount,
-                    ResolvedUnknownCount,
-                    NotCompletedCount
-              ]
-      );
+                              Format(
+                                     'PlayerQuest %d/%d - WorldQuest %d/%d - Auto %d/%d',
+                                     [
+                                      PlayerQuestCompletedCount,
+                                      PlayerQuestCount,
+                                      WorldQuestCompletedCount,
+                                      WorldQuestCount,
+                                      AutoQuestResolvedCount,
+                                      AutoQuestCount
+                                     ]
+                              );
   finally
     QuestGrid.EndUpdate;
   end;
