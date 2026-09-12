@@ -15,13 +15,13 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    QuestSummaryLabel: TLabel;
     OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
     QuestGrid: TStringGrid;
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
-    destructor Destroy; override;
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -31,7 +31,7 @@ type
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid(const Knowledge: TKnowledgeItems);
   public
-
+    destructor Destroy; override;
   end;
 
 const
@@ -94,6 +94,10 @@ var
   I: Integer;
   Row: Integer;
   StatusText: string;
+  QuestCount: Integer;
+  CompletedCount: Integer;
+  NotCompletedCount: Integer;
+  ResolvedUnknownCount: Integer;
 begin
   CollectJournalMetadata(
     FJournalRoot,
@@ -106,11 +110,28 @@ begin
   try
     QuestGrid.RowCount := 1;
     Row := 1;
+    QuestCount := 0;
+    CompletedCount := 0;
+    NotCompletedCount := 0;
+    ResolvedUnknownCount := 0;
 
     for I := 0 to High(Metadata) do
     begin
       if Metadata[I].Family <> jfQuest then
         Continue;
+
+      Inc(QuestCount);
+
+      case Metadata[I].PersonalStatus of
+        qpsCompletedPersonally:
+            Inc(CompletedCount);
+
+        qpsNotCompleted:
+            Inc(NotCompletedCount);
+
+        qpsResolvedUnknownOrigin:
+            Inc(ResolvedUnknownCount);
+      end;
 
       case Metadata[I].PersonalStatus of
         qpsNotCompleted:
@@ -135,6 +156,16 @@ begin
 
       Inc(Row);
     end;
+    QuestSummaryLabel.Caption :=
+      Format(
+          '%d quests - %d completed personally - %d resolved unknown - %d not completed',
+              [
+                    QuestCount,
+                    CompletedCount,
+                    ResolvedUnknownCount,
+                    NotCompletedCount
+              ]
+      );
   finally
     QuestGrid.EndUpdate;
   end;

@@ -26,6 +26,13 @@ object MainForm: TMainForm
       TabOrder = 0
       OnClick = OpenSaveButtonClick
     end
+    object QuestSummaryLabel: TLabel
+      Left = 16
+      Height = 15
+      Top = 17
+      Width = 87
+      Caption = 'No quest loaded'
+    end
   end
   object QuestGrid: TStringGrid
     Left = 0
