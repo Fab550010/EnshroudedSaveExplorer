@@ -56,6 +56,112 @@ implementation
 
 { TMainForm }
 
+function CompareJournalMetadata(
+  const A, B: TJournalObjectMetadata;
+  SortColumn: Integer
+): Integer;
+begin
+  case SortColumn of
+    0:
+      Result := CompareText(A.Name, B.Name);
+
+    1:
+      Result := CompareText(A.RawType, B.RawType);
+
+    2:
+      Result :=
+        CompareText(
+          QuestPersonalStatusText(A.PersonalStatus),
+          QuestPersonalStatusText(B.PersonalStatus)
+        );
+
+    3:
+      begin
+        if A.ID < B.ID then
+          Result := -1
+        else if A.ID > B.ID then
+          Result := 1
+        else
+          Result := 0;
+      end;
+
+  else
+    Result := 0;
+  end;
+end;
+
+procedure SortJournalMetadata(
+  var Metadata: TJournalObjectMetadataArray;
+  SortColumn: Integer;
+  Ascending: Boolean
+);
+
+  procedure QuickSort(L, R: Integer);
+  var
+    I, J: Integer;
+    Pivot: TJournalObjectMetadata;
+    Temp: TJournalObjectMetadata;
+    C: Integer;
+  begin
+    I := L;
+    J := R;
+    Pivot := Metadata[(L + R) div 2];
+
+    repeat
+      repeat
+        C := CompareJournalMetadata(
+          Metadata[I],
+          Pivot,
+          SortColumn
+        );
+
+        if not Ascending then
+          C := -C;
+
+        if C < 0 then
+          Inc(I);
+      until C >= 0;
+
+      repeat
+        C := CompareJournalMetadata(
+          Metadata[J],
+          Pivot,
+          SortColumn
+        );
+
+        if not Ascending then
+          C := -C;
+
+        if C > 0 then
+          Dec(J);
+      until C <= 0;
+
+      if I <= J then
+      begin
+        Temp := Metadata[I];
+        Metadata[I] := Metadata[J];
+        Metadata[J] := Temp;
+
+        Inc(I);
+        Dec(J);
+      end;
+
+    until I > J;
+
+    if L < J then
+      QuickSort(L, J);
+
+    if I < R then
+      QuickSort(I, R);
+  end;
+
+begin
+  if Length(Metadata) <= 1 then
+    Exit;
+
+  QuickSort(0, High(Metadata));
+end;
+
 procedure TMainForm.QuestGridHeaderClick(
   Sender: TObject;
   IsColumn: Boolean;
@@ -140,6 +246,12 @@ begin
     FLocalization,
     Metadata
   );
+
+  SortJournalMetadata(
+                      Metadata,
+                      FSortColumn,
+                      FSortAscending
+                      );
 
   QuestGrid.BeginUpdate;
   try
