@@ -41,6 +41,12 @@ type
     qpsResolvedUnknownOrigin
   );
 
+  TLoreStatus = (
+              lsUndiscovered,
+              lsPartial,
+              lsComplete
+  );
+
   TJournalQuestState = record
     QuestID: Cardinal;
     Name: string;
@@ -91,6 +97,9 @@ type
      DirectKnowFound: Boolean;
      DirectKnowValue: Cardinal;
      PersonalStatus: TQuestPersonalStatus;
+
+     LoreStatus: TLoreStatus;
+     LoreDiscoveredEntries: Integer;
    end;
 
   TJournalObjectMetadataArray = array of TJournalObjectMetadata;
@@ -159,6 +168,19 @@ function QuestPersonalStatusText(
 ): string;
 
 procedure DumpQuestPersonalProgress(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+
+procedure DumpLoreObject(
+  JournalRoot: TJSONData;
+  LoreID: Cardinal;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+
+procedure DumpLoreRequirementStats(
   JournalRoot: TJSONData;
   const Knowledge: TKnowledgeItems;
   const Localization: TLocalizationItems
@@ -490,6 +512,216 @@ begin
     );
 end;
 
+procedure DumpLoreRequirementStats(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+var
+  Objects: TQuestObjectArray;
+  Obj: TJSONObject;
+  Metadata: TJournalObjectMetadata;
+
+  EntriesNode: TJSONData;
+  Entries: TJSONArray;
+  EntryObj: TJSONObject;
+
+  RequirementNode: TJSONData;
+  RequirementObj: TJSONObject;
+
+  I, J: Integer;
+
+  LoreObjectCount: Integer;
+  LoreEntryCount: Integer;
+  StandardRequirementCount: Integer;
+  NoRequirementCount: Integer;
+  OtherRequirementCount: Integer;
+
+  RequirementID: QWord;
+  RequirementType: string;
+  CompareOperator: string;
+  CompareValue: QWord;
+
+  EntryID: QWord;
+  EntryNameID: QWord;
+  EntryName: string;
+begin
+  SetLength(Objects, 0);
+
+  CollectQuestObjects(
+    JournalRoot,
+    Objects
+  );
+
+  LoreObjectCount := 0;
+  LoreEntryCount := 0;
+  StandardRequirementCount := 0;
+  NoRequirementCount := 0;
+  OtherRequirementCount := 0;
+
+  WriteLn;
+  WriteLn('=== LORE REQUIREMENT DIAGNOSTIC ===');
+  WriteLn;
+
+  for I := 0 to High(Objects) do
+  begin
+    Obj := Objects[I];
+
+    Metadata :=
+      ReadJournalObjectMetadata(
+        Obj,
+        Knowledge,
+        Localization
+      );
+
+    if Metadata.Family <> jfLore then
+      Continue;
+
+    Inc(LoreObjectCount);
+
+    EntriesNode := Obj.Find('entries');
+
+    if
+      (EntriesNode = nil) or
+      (EntriesNode.JSONType <> jtArray)
+    then
+      Continue;
+
+    Entries := TJSONArray(EntriesNode);
+
+    for J := 0 to Entries.Count - 1 do
+    begin
+      if Entries.Items[J].JSONType <> jtObject then
+        Continue;
+
+      Inc(LoreEntryCount);
+
+      EntryObj :=
+        TJSONObject(
+          Entries.Items[J]
+        );
+
+      EntryID :=
+        GetNestedUInt(
+          EntryObj,
+          'entryId',
+          'value',
+          0
+        );
+
+      EntryNameID :=
+        GetNestedUInt(
+          EntryObj,
+          'name',
+          'value',
+          0
+        );
+
+      EntryName :=
+        Localize(
+          Localization,
+          EntryNameID
+        );
+
+      RequirementNode :=
+        EntryObj.Find('knowledgeRequirement');
+
+      if
+        (RequirementNode = nil) or
+        (RequirementNode.JSONType <> jtObject)
+      then
+      begin
+        Inc(NoRequirementCount);
+
+        WriteLn(
+          'NO REQUIREMENT: ',
+          Metadata.Name,
+          ' / ',
+          EntryName,
+          ' [$',
+          IntToHex(EntryID, 8),
+          ']'
+        );
+
+        Continue;
+      end;
+
+      RequirementObj :=
+        TJSONObject(RequirementNode);
+
+      RequirementID :=
+        GetNestedUInt(
+          RequirementObj,
+          'knowledgeOrQueryId',
+          'value',
+          0
+        );
+
+      RequirementType :=
+        GetStringField(
+          RequirementObj,
+          'type',
+          ''
+        );
+
+      CompareOperator :=
+        GetStringField(
+          RequirementObj,
+          'compareOperator',
+          ''
+        );
+
+      CompareValue :=
+        GetUIntField(
+          RequirementObj,
+          'compareValue',
+          0
+        );
+
+      if
+        SameText(RequirementType, 'SimpleBool') and
+        SameText(CompareOperator, 'Equals') and
+        (CompareValue = 1) and
+        (RequirementID <> 0)
+      then
+      begin
+        Inc(StandardRequirementCount);
+        Continue;
+      end;
+
+      Inc(OtherRequirementCount);
+
+      WriteLn(
+        'OTHER REQUIREMENT: ',
+        Metadata.Name,
+        ' / ',
+        EntryName,
+        ' [$',
+        IntToHex(EntryID, 8),
+        ']'
+      );
+
+      WriteLn(
+        '  knowledgeOrQueryId=$',
+        IntToHex(RequirementID, 8),
+        ' type="',
+        RequirementType,
+        '" operator="',
+        CompareOperator,
+        '" value=',
+        CompareValue
+      );
+    end;
+  end;
+
+  WriteLn;
+  WriteLn('=== SUMMARY ===');
+  WriteLn('Lore objects              : ', LoreObjectCount);
+  WriteLn('Lore entries              : ', LoreEntryCount);
+  WriteLn('SimpleBool Equals 1       : ', StandardRequirementCount);
+  WriteLn('No knowledge requirement  : ', NoRequirementCount);
+  WriteLn('Other requirement         : ', OtherRequirementCount);
+end;
 
 procedure DumpRequirement(
   const LabelText: string;
@@ -1254,6 +1486,91 @@ begin
   Result := jfUnknown;
 end;
 
+procedure InferLoreProgress(
+  Obj: TJSONObject;
+  const Knowledge: TKnowledgeItems;
+  out Status: TLoreStatus;
+  out DiscoveredEntries: Integer
+);
+var
+  EntriesNode: TJSONData;
+  Entries: TJSONArray;
+  EntryObj: TJSONObject;
+  RequirementNode: TJSONData;
+  RequirementObj: TJSONObject;
+  RequirementID: QWord;
+  KnowValue: Cardinal;
+  I: Integer;
+  TotalEntries: Integer;
+begin
+  DiscoveredEntries := 0;
+  TotalEntries := 0;
+
+  EntriesNode := Obj.Find('entries');
+
+  if
+    (EntriesNode = nil) or
+    (EntriesNode.JSONType <> jtArray)
+  then
+  begin
+    Status := lsUndiscovered;
+    Exit;
+  end;
+
+  Entries := TJSONArray(EntriesNode);
+  TotalEntries := Entries.Count;
+
+  for I := 0 to Entries.Count - 1 do
+  begin
+    if Entries.Items[I].JSONType <> jtObject then
+      Continue;
+
+    EntryObj :=
+      TJSONObject(
+        Entries.Items[I]
+      );
+
+    RequirementNode :=
+      EntryObj.Find('knowledgeRequirement');
+
+    if
+      (RequirementNode = nil) or
+      (RequirementNode.JSONType <> jtObject)
+    then
+      Continue;
+
+    RequirementObj :=
+      TJSONObject(RequirementNode);
+
+    RequirementID :=
+      GetNestedUInt(
+        RequirementObj,
+        'knowledgeOrQueryId',
+        'value',
+        0
+      );
+
+    if
+      (RequirementID <> 0) and
+      (RequirementID <= High(Cardinal)) and
+      FindKnowledgeValue(
+        Knowledge,
+        Cardinal(RequirementID),
+        KnowValue
+      ) and
+      (KnowValue <> 0)
+    then
+      Inc(DiscoveredEntries);
+  end;
+
+  if DiscoveredEntries = 0 then
+    Status := lsUndiscovered
+  else if DiscoveredEntries = TotalEntries then
+    Status := lsComplete
+  else
+    Status := lsPartial;
+end;
+
 
 function ReadJournalObjectMetadata(
   Obj: TJSONObject;
@@ -1338,6 +1655,19 @@ begin
     Result.EntryCount := TJSONArray(EntriesData).Count
   else
     Result.EntryCount := 0;
+
+  if Result.Family = jfLore then
+     InferLoreProgress(
+                       Obj,
+                       Knowledge,
+                       Result.LoreStatus,
+                       Result.LoreDiscoveredEntries
+                       )
+  else
+  begin
+       Result.LoreStatus := lsUndiscovered;
+       Result.LoreDiscoveredEntries := 0;
+  end;
 
   Result.DirectKnowFound := False;
   Result.DirectKnowValue := 0;
@@ -1878,6 +2208,111 @@ begin
   end;
 end;
 
+
+procedure DumpLoreObject(
+  JournalRoot: TJSONData;
+  LoreID: Cardinal;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+var
+  Objects: TQuestObjectArray;
+  Obj: TJSONObject;
+  Metadata: TJournalObjectMetadata;
+  EntriesNode: TJSONData;
+  Entries: TJSONArray;
+  EntryObj: TJSONObject;
+  EntryID: QWord;
+  NameID: QWord;
+  I, j: Integer;
+  KnowValue: Cardinal;
+  KnowFound: Boolean;
+begin
+  SetLength(Objects, 0);
+
+  CollectQuestObjects(
+    JournalRoot,
+    Objects
+  );
+
+  for I := 0 to High(Objects) do
+  begin
+    Obj := Objects[I];
+
+    Metadata :=
+      ReadJournalObjectMetadata(
+        Obj,
+        Knowledge,
+        Localization
+      );
+
+    if Metadata.ID <> LoreID then
+      Continue;
+
+    WriteLn('=== LORE OBJECT ===');
+    WriteLn('Name: ', Metadata.Name);
+    WriteLn('ID: $', IntToHex(Metadata.ID, 8));
+    WriteLn('Entries: ', Metadata.EntryCount);
+    WriteLn;
+
+    EntriesNode := Obj.Find('entries');
+
+    if (EntriesNode = nil) or
+       (EntriesNode.JSONType <> jtArray) then
+      Exit;
+
+    Entries := TJSONArray(EntriesNode);
+
+    for j := 0 to Entries.Count - 1 do
+    begin
+      if Entries.Items[j].JSONType <> jtObject then
+        Continue;
+
+      EntryObj := TJSONObject(Entries.Items[j]);
+
+      EntryID :=
+        GetNestedUInt(
+          EntryObj,
+          'entryId',
+          'value',
+          0
+        );
+
+      NameID :=
+        GetNestedUInt(
+          EntryObj,
+          'name',
+          'value',
+          0
+        );
+
+      WriteLn(
+        '#', I,
+        ' entryId=$', IntToHex(EntryID, 8),
+        ' name="', Localize(Localization, NameID), '"'
+      );
+
+      if EntryID <= High(Cardinal) then
+      begin
+        KnowFound :=
+          FindKnowledgeValue(
+            Knowledge,
+            Cardinal(EntryID),
+            KnowValue
+          );
+
+        if KnowFound then
+          WriteLn('  direct KNOW=', KnowValue)
+        else
+          WriteLn('  direct KNOW=absent');
+      end;
+    end;
+
+    Exit;
+  end;
+
+  WriteLn('Lore object not found: $', IntToHex(LoreID, 8));
+end;
 
 
 end.

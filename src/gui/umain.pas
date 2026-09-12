@@ -56,13 +56,37 @@ implementation
 
 { TMainForm }
 
+function QuestStatusSortRank(
+  Status: TQuestPersonalStatus
+): Integer;
+begin
+  case Status of
+    qpsCompletedPersonally:
+      Result := 0;
+
+    qpsResolvedUnknownOrigin:
+      Result := 1;
+
+    qpsNotCompleted:
+      Result := 2;
+
+  else
+    Result := 3;
+  end;
+end;
+
 function CompareQuestStatus(
   A, B: TQuestPersonalStatus
 ): Integer;
+var
+  RankA, RankB: Integer;
 begin
-  if Ord(A) < Ord(B) then
+  RankA := QuestStatusSortRank(A);
+  RankB := QuestStatusSortRank(B);
+
+  if RankA < RankB then
     Result := -1
-  else if Ord(A) > Ord(B) then
+  else if RankA > RankB then
     Result := 1
   else
     Result := 0;

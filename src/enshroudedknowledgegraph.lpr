@@ -1456,6 +1456,14 @@ begin
       Localization
     );
 
+    WriteLn;
+
+    DumpLoreRequirementStats(
+      JournalRoot,
+      Knowledge,
+      Localization
+    );
+
   finally
     JournalRoot.Free;
   end;
