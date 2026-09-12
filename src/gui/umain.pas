@@ -41,6 +41,7 @@ type
     procedure LoadTestJournal;
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid;
+    procedure PopulateLoreGrid;
   public
     destructor Destroy; override;
   end;
@@ -513,8 +514,10 @@ begin
     CharacterComboBox.ItemIndex := 0;
     CharacterComboBoxChange(CharacterComboBox);
   end
-  else
+  else begin
     QuestGrid.RowCount := 1;
+    LoreGrid.RowCount := 1;
+  end;
 end;
 
 procedure TMainForm.QuestFilterChange(Sender: TObject);
@@ -553,6 +556,72 @@ begin
   );
 
   PopulateQuestGrid;
+  PopulateLoreGrid;
+end;
+
+procedure TMainForm.PopulateLoreGrid;
+var
+  Metadata: TJournalObjectMetadataArray;
+  I: Integer;
+  Row: Integer;
+  StatusText: string;
+begin
+  CollectJournalMetadata(
+    FJournalRoot,
+    FKnowledge,
+    FLocalization,
+    Metadata
+  );
+
+  LoreGrid.BeginUpdate;
+  try
+    LoreGrid.RowCount := 1;
+    Row := 1;
+
+    for I := 0 to High(Metadata) do
+    begin
+      if Metadata[I].Family <> jfLore then
+        Continue;
+
+      case Metadata[I].LoreStatus of
+        lsUndiscovered:
+          StatusText := 'Undiscovered';
+
+        lsPartial:
+          StatusText := 'Partial';
+
+        lsComplete:
+          StatusText := 'Complete';
+
+      else
+        StatusText := 'Unknown';
+      end;
+
+      LoreGrid.RowCount := Row + 1;
+
+      LoreGrid.Cells[0, Row] :=
+        Metadata[I].Name;
+
+      LoreGrid.Cells[1, Row] :=
+        Format(
+          '%d/%d',
+          [
+            Metadata[I].LoreDiscoveredEntries,
+            Metadata[I].EntryCount
+          ]
+        );
+
+      LoreGrid.Cells[2, Row] :=
+        StatusText;
+
+      LoreGrid.Cells[3, Row] :=
+        '$' + IntToHex(Metadata[I].ID, 8);
+
+      Inc(Row);
+    end;
+  finally
+    LoreGrid.EndUpdate;
+  end;
 end;
 
 end.
