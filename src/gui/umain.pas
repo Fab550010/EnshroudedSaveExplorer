@@ -25,12 +25,15 @@ type
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
     procedure QuestFilterChange(Sender: TObject);
+    procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
     FJournalRoot: TJSONData;
     FLocalization: TLocalizationItems;
     FKnowledge: TKnowledgeItems;
+    FSortColumn: Integer;
+    FSortAscending: Boolean;
     procedure LoadTestJournal;
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid;
@@ -53,11 +56,33 @@ implementation
 
 { TMainForm }
 
+procedure TMainForm.QuestGridHeaderClick(
+  Sender: TObject;
+  IsColumn: Boolean;
+  Index: Integer
+);
+begin
+  if not IsColumn then
+    Exit;
+
+  if Index = FSortColumn then
+    FSortAscending := not FSortAscending
+  else
+  begin
+    FSortColumn := Index;
+    FSortAscending := True;
+  end;
+
+  PopulateQuestGrid;
+end;
+
 
 procedure TMainForm.LoadTestJournal;
 var
   Stream: TFileStream;
 begin
+  FSortColumn := 0;
+  FSortAscending := True;
   FJournalRoot.Free;
   FJournalRoot := nil;
 
