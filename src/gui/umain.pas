@@ -25,7 +25,6 @@ type
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
     procedure QuestFilterChange(Sender: TObject);
-    procedure QuestTypeFilterComboboxChange(Sender: TObject);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -149,6 +148,19 @@ begin
 
            3:
              if not SameText(Metadata[I].RawType, 'WorldQuest') then
+                Continue;
+      end;
+      case QuestStatusFilterComboBox.ItemIndex of
+           1:
+             if Metadata[I].PersonalStatus <> qpsNotCompleted then
+                Continue;
+
+           2:
+             if Metadata[I].PersonalStatus <> qpsCompletedPersonally then
+                Continue;
+
+           3:
+             if Metadata[I].PersonalStatus <> qpsResolvedUnknownOrigin then
                 Continue;
       end;
 
@@ -291,12 +303,10 @@ end;
 
 procedure TMainForm.QuestFilterChange(Sender: TObject);
 begin
+     if Length(FKnowledge) = 0 then
+        Exit;
 
-end;
-
-procedure TMainForm.QuestFilterChange(Sender: TObject);
-begin
-
+     PopulateQuestGrid;
 end;
 
 procedure TMainForm.CharacterComboBoxChange(Sender: TObject);
