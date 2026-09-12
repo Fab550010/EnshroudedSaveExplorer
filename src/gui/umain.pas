@@ -56,34 +56,85 @@ implementation
 
 { TMainForm }
 
+function CompareQuestStatus(
+  A, B: TQuestPersonalStatus
+): Integer;
+begin
+  if Ord(A) < Ord(B) then
+    Result := -1
+  else if Ord(A) > Ord(B) then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function CompareCardinal(
+  A, B: Cardinal
+): Integer;
+begin
+  if A < B then
+    Result := -1
+  else if A > B then
+    Result := 1
+  else
+    Result := 0;
+end;
+
 function CompareJournalMetadata(
   const A, B: TJournalObjectMetadata;
   SortColumn: Integer
 ): Integer;
 begin
   case SortColumn of
+
+    // Name -> Type -> Status
     0:
-      Result := CompareText(A.Name, B.Name);
+      begin
+        Result := CompareText(A.Name, B.Name);
 
+        if Result = 0 then
+          Result := CompareText(A.RawType, B.RawType);
+
+        if Result = 0 then
+          Result := CompareQuestStatus(
+            A.PersonalStatus,
+            B.PersonalStatus
+          );
+      end;
+
+    // Type -> Status -> Name
     1:
-      Result := CompareText(A.RawType, B.RawType);
+      begin
+        Result := CompareText(A.RawType, B.RawType);
 
+        if Result = 0 then
+          Result := CompareQuestStatus(
+            A.PersonalStatus,
+            B.PersonalStatus
+          );
+
+        if Result = 0 then
+          Result := CompareText(A.Name, B.Name);
+      end;
+
+    // Status -> Type -> Name
     2:
-      Result :=
-        CompareText(
-          QuestPersonalStatusText(A.PersonalStatus),
-          QuestPersonalStatusText(B.PersonalStatus)
+      begin
+        Result := CompareQuestStatus(
+          A.PersonalStatus,
+          B.PersonalStatus
         );
 
-    3:
-      begin
-        if A.ID < B.ID then
-          Result := -1
-        else if A.ID > B.ID then
-          Result := 1
-        else
-          Result := 0;
+        if Result = 0 then
+          Result := CompareText(A.RawType, B.RawType);
+
+        if Result = 0 then
+          Result := CompareText(A.Name, B.Name);
       end;
+
+    // ID
+    3:
+      Result := CompareCardinal(A.ID, B.ID);
 
   else
     Result := 0;
