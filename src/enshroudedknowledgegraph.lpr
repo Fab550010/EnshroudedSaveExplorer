@@ -1589,11 +1589,19 @@ begin
     );
     WriteLn;
 
+    writeln('***********yo**************');
+
     DumpQuestInventory(
       JournalRoot,
       Knowledge,
       Localization
     );
+
+    DumpLoreProgress(
+                     JournalRoot,
+                     Knowledge,
+                     Localization
+                     );
 
   finally
     JournalRoot.Free;

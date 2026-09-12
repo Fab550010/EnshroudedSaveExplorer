@@ -186,8 +186,101 @@ procedure DumpLoreRequirementStats(
   const Localization: TLocalizationItems
 );
 
+procedure DumpLoreProgress(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+
 implementation
 
+function LoreStatusText(
+  Status: TLoreStatus
+): string;
+begin
+  case Status of
+    lsUndiscovered:
+      Result := 'UNDISCOVERED';
+
+    lsPartial:
+      Result := 'PARTIAL';
+
+    lsComplete:
+      Result := 'COMPLETE';
+
+  else
+    Result := 'UNKNOWN';
+  end;
+end;
+
+procedure DumpLoreProgress(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+var
+  Metadata: TJournalObjectMetadataArray;
+  I: Integer;
+
+  LoreCount: Integer;
+  UndiscoveredCount: Integer;
+  PartialCount: Integer;
+  CompleteCount: Integer;
+begin
+  CollectJournalMetadata(
+    JournalRoot,
+    Knowledge,
+    Localization,
+    Metadata
+  );
+
+  LoreCount := 0;
+  UndiscoveredCount := 0;
+  PartialCount := 0;
+  CompleteCount := 0;
+
+  WriteLn;
+  WriteLn('=== LORE PROGRESS ===');
+  WriteLn;
+
+  for I := 0 to High(Metadata) do
+  begin
+    if Metadata[I].Family <> jfLore then
+      Continue;
+
+    Inc(LoreCount);
+
+    case Metadata[I].LoreStatus of
+      lsUndiscovered:
+        Inc(UndiscoveredCount);
+
+      lsPartial:
+        Inc(PartialCount);
+
+      lsComplete:
+        Inc(CompleteCount);
+    end;
+
+    WriteLn(
+      LoreStatusText(Metadata[I].LoreStatus),
+      ' | ',
+      Metadata[I].LoreDiscoveredEntries,
+      '/',
+      Metadata[I].EntryCount,
+      ' | ',
+      Metadata[I].Name,
+      ' | $',
+      IntToHex(Metadata[I].ID, 8)
+    );
+  end;
+
+  WriteLn;
+  WriteLn('=== SUMMARY ===');
+  WriteLn('Lore objects  : ', LoreCount);
+  WriteLn('Undiscovered  : ', UndiscoveredCount);
+  WriteLn('Partial       : ', PartialCount);
+  WriteLn('Complete      : ', CompleteCount);
+end;
 
 function InferQuestPersonalStatus(
   const RawType: string;
