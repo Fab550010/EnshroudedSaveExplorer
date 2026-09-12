@@ -30,6 +30,7 @@ type
     procedure OpenSaveButtonClick(Sender: TObject);
     procedure QuestFilterChange(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
+    procedure LoreGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -38,6 +39,8 @@ type
     FKnowledge: TKnowledgeItems;
     FSortColumn: Integer;
     FSortAscending: Boolean;
+    FLoreSortColumn: Integer;
+    FLoreSortAscending: Boolean;
     procedure LoadTestJournal;
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid;
@@ -60,6 +63,42 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+function LoreStatusSortRank(
+  Status: TLoreStatus
+): Integer;
+begin
+  case Status of
+    lsComplete:
+      Result := 0;
+
+    lsPartial:
+      Result := 1;
+
+    lsUndiscovered:
+      Result := 2;
+
+  else
+    Result := 3;
+  end;
+end;
+
+function CompareLoreStatus(
+  A, B: TLoreStatus
+): Integer;
+var
+  RankA, RankB: Integer;
+begin
+  RankA := LoreStatusSortRank(A);
+  RankB := LoreStatusSortRank(B);
+
+  if RankA < RankB then
+    Result := -1
+  else if RankA > RankB then
+    Result := 1
+  else
+    Result := 0;
+end;
 
 function QuestStatusSortRank(
   Status: TQuestPersonalStatus
@@ -107,6 +146,125 @@ begin
     Result := 1
   else
     Result := 0;
+end;
+
+function CompareLoreMetadata(
+  const A, B: TJournalObjectMetadata;
+  SortColumn: Integer
+): Integer;
+begin
+  case SortColumn of
+
+    // Name
+    0:
+      Result := CompareText(A.Name, B.Name);
+
+    // Progress
+    1:
+      begin
+        if A.LoreDiscoveredEntries < B.LoreDiscoveredEntries then
+          Result := -1
+        else if A.LoreDiscoveredEntries > B.LoreDiscoveredEntries then
+          Result := 1
+        else if A.EntryCount < B.EntryCount then
+          Result := -1
+        else if A.EntryCount > B.EntryCount then
+          Result := 1
+        else
+          Result := CompareText(A.Name, B.Name);
+      end;
+
+    // Status
+    2:
+      begin
+        Result := CompareLoreStatus(
+          A.LoreStatus,
+          B.LoreStatus
+        );
+
+        if Result = 0 then
+          Result := CompareText(A.Name, B.Name);
+      end;
+
+    // ID
+    3:
+      Result := CompareCardinal(A.ID, B.ID);
+
+  else
+    Result := 0;
+  end;
+end;
+
+procedure SortLoreMetadata(
+  var Metadata: TJournalObjectMetadataArray;
+  SortColumn: Integer;
+  Ascending: Boolean
+);
+
+  procedure QuickSort(L, R: Integer);
+  var
+    I, J: Integer;
+    Pivot: TJournalObjectMetadata;
+    Temp: TJournalObjectMetadata;
+    C: Integer;
+  begin
+    I := L;
+    J := R;
+    Pivot := Metadata[(L + R) div 2];
+
+    repeat
+      repeat
+        C := CompareLoreMetadata(
+          Metadata[I],
+          Pivot,
+          SortColumn
+        );
+
+        if not Ascending then
+          C := -C;
+
+        if C < 0 then
+          Inc(I);
+      until C >= 0;
+
+      repeat
+        C := CompareLoreMetadata(
+          Metadata[J],
+          Pivot,
+          SortColumn
+        );
+
+        if not Ascending then
+          C := -C;
+
+        if C > 0 then
+          Dec(J);
+      until C <= 0;
+
+      if I <= J then
+      begin
+        Temp := Metadata[I];
+        Metadata[I] := Metadata[J];
+        Metadata[J] := Temp;
+
+        Inc(I);
+        Dec(J);
+      end;
+
+    until I > J;
+
+    if L < J then
+      QuickSort(L, J);
+
+    if I < R then
+      QuickSort(I, R);
+  end;
+
+begin
+  if Length(Metadata) <= 1 then
+    Exit;
+
+  QuickSort(0, High(Metadata));
 end;
 
 function CompareJournalMetadata(
@@ -262,6 +420,26 @@ begin
   PopulateQuestGrid;
 end;
 
+procedure TMainForm.LoreGridHeaderClick(
+  Sender: TObject;
+  IsColumn: Boolean;
+  Index: Integer
+);
+begin
+  if not IsColumn then
+    Exit;
+
+  if Index = FLoreSortColumn then
+    FLoreSortAscending := not FLoreSortAscending
+  else
+  begin
+    FLoreSortColumn := Index;
+    FLoreSortAscending := True;
+  end;
+
+  PopulateLoreGrid;
+end;
+
 
 procedure TMainForm.LoadTestJournal;
 var
@@ -271,6 +449,8 @@ begin
   FSortAscending := True;
   FJournalRoot.Free;
   FJournalRoot := nil;
+  FLoreSortColumn := 0;
+  FLoreSortAscending := True;
 
   Stream :=
     TFileStream.Create(
@@ -572,6 +752,12 @@ begin
     FLocalization,
     Metadata
   );
+
+  SortLoreMetadata(
+                   Metadata,
+                   FLoreSortColumn,
+                   FLoreSortAscending
+                   );
 
   LoreGrid.BeginUpdate;
   try
