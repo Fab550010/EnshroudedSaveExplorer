@@ -6,7 +6,7 @@ uses
   {$IFDEF UNIX}
   cthreads,
   {$ENDIF}
-  Classes, uSaveIndex, uSteamDiscovery, uKnowledgeBlob, uCharacterData
+  Classes, uSaveIndex, uSteamDiscovery, uKnowledgeBlob, uCharacterData, uBDB
   { you can add units after this };
 
 var
@@ -33,6 +33,7 @@ begin
   DumpBlobInventory(ResolveCharactersSave(IndexFileName));
 
   DumpCharacterNames(ResolveCharactersSave(IndexFileName));
+
 
 end.
 

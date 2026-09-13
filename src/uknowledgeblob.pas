@@ -403,6 +403,7 @@ var
   Blob: TBytes;
   I, J: Integer;
   Offset : Integer;
+  Name : string;
 begin
   Owners :=
     ListKnowledgeOwners(
@@ -435,11 +436,40 @@ begin
         Offset := FindTextOffset(Blob,Names[J]);
         WriteLn('offset: ', Offset);
         DumpBytesAround(Blob, Offset, 16, 32);
+        Name := Names[J];
       end;
     end;
 
     WriteLn;
     WriteLn('Nom extrait proprement : ', ExtractCharacterName(Blob));
+    Offset := FindTextOffset(Blob, 'lastPlayTime');
+    WriteLn('lastPlayTime offset: ', Offset);
+    DumpBytesAround(Blob, Offset, 8, 200);
+    WriteLn('Field names :');
+    DumpCharacterFieldNames(Blob);
+    WriteLn('Dump CHAR');
+    DumpBytesAround(Blob, 0, 0, 256);
+    WriteLn('Dump BDB Header');
+    DumpBDBHeader(Blob);
+    if (Name = 'Fabrice' )
+    then begin
+         WriteLn('Dump Fabrice');
+         DumpBytesAround(Blob, $00059D9C, 0, 128);
+         DumpBytesAround(Blob, $00059EB8, 0, 128);
+         DumpBytesAround(Blob, $0005A350, 0, 128);
+         DumpBytesAround(Blob, $000A1BC4, 0, 128);
+         DumpBytesAround(Blob, $000A23BC, 0, 128);
+         DumpBytesAround(Blob, $000A2854, 0, 128);
+    end else if (Name = 'Virgin')
+    then begin
+         WriteLn('Dump Virgin');
+         DumpBytesAround(Blob, $4E8F4, 0, 128);
+         DumpBytesAround(Blob, $4E9E4, 0, 128);
+         DumpBytesAround(Blob, $4EA84, 0, 128);
+         DumpBytesAround(Blob, $8D710, 0, 128);
+         DumpBytesAround(Blob, $8D80C, 0, 128);
+         DumpBytesAround(Blob, $8D8AC, 0, 128);
+    end;
   end;
 end;
 
