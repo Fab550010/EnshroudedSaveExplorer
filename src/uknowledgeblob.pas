@@ -455,6 +455,15 @@ begin
     DumpBytesAround(Blob, 0, 0, 256);
     WriteLn('Dump BDB Header');
     DumpBDBHeader(Blob);
+    if ParseBDBHeader(Blob, Header) then
+    begin
+         if ValidateBDBStringPool(Blob, Header)
+         then begin
+              WriteLn('String pool validation: OK');
+              DumpUInt32RegionStats(Blob, BDBDataAfterStringPoolOffset(Header), Header.Unknown4C);
+         end else
+             WriteLn('String pool validation: FAILED');
+    end;
     if (Name = 'Fabrice' )
     then begin
          WriteLn('Dump Fabrice');

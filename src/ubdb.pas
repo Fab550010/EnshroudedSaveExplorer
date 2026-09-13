@@ -97,6 +97,21 @@ procedure DumpUInt32Values(
   Count: Cardinal
 );
 
+procedure DumpUInt32RegionStats(
+  const Data: TBytes;
+  StartOffset: Cardinal;
+  EndOffset: Cardinal
+);
+
+function ValidateBDBStringPool(
+  const Data: TBytes;
+  const Header: TBDBHeader
+): Boolean;
+
+function BDBDataAfterStringPoolOffset(
+  const Header: TBDBHeader
+): Cardinal;
+
 implementation
 
 function ReadUInt32LE(
@@ -433,6 +448,133 @@ begin
         '  offset=$',
         IntToHex(I, 8)
       );
+  end;
+end;
+
+procedure DumpUInt32RegionStats(
+  const Data: TBytes;
+  StartOffset: Cardinal;
+  EndOffset: Cardinal
+);
+var
+  Pos: Cardinal;
+  Count: Cardinal;
+  MinValue: Cardinal;
+  MaxValue: Cardinal;
+  V: Cardinal;
+  Previous: Cardinal;
+  ConsecutiveLinks: Cardinal;
+  UniqueValues: TStringList;
+begin
+  if EndOffset <= StartOffset then
+  begin
+    WriteLn('Invalid uint32 region');
+    Exit;
+  end;
+
+  if EndOffset > Cardinal(Length(Data)) then
+  begin
+    WriteLn('Region exceeds blob size');
+    Exit;
+  end;
+
+  Count :=
+    (EndOffset - StartOffset) div 4;
+
+  if Count = 0 then
+  begin
+    WriteLn('Empty uint32 region');
+    Exit;
+  end;
+
+  UniqueValues := TStringList.Create;
+
+  try
+    UniqueValues.Sorted := True;
+    UniqueValues.Duplicates := dupIgnore;
+
+    MinValue := High(Cardinal);
+    MaxValue := 0;
+    ConsecutiveLinks := 0;
+    Previous := 0;
+
+    for Pos := 0 to Count - 1 do
+    begin
+      V :=
+        ReadUInt32LE(
+          Data,
+          StartOffset + Pos * 4
+        );
+
+      if V < MinValue then
+        MinValue := V;
+
+      if V > MaxValue then
+        MaxValue := V;
+
+      UniqueValues.Add(
+        IntToHex(V, 8)
+      );
+
+      if
+        (Pos > 0) and
+        (V = Previous + 1)
+      then
+        Inc(ConsecutiveLinks);
+
+      Previous := V;
+    end;
+
+    WriteLn('=== UINT32 REGION STATS ===');
+
+    WriteLn(
+      'Start: $',
+      IntToHex(StartOffset, 8)
+    );
+
+    WriteLn(
+      'End:   $',
+      IntToHex(EndOffset, 8)
+    );
+
+    WriteLn(
+      'Bytes: ',
+      EndOffset - StartOffset
+    );
+
+    WriteLn(
+      'UInt32 count: ',
+      Count
+    );
+
+    WriteLn(
+      'Min: ',
+      MinValue,
+      ' ($',
+      IntToHex(MinValue, 8),
+      ')'
+    );
+
+    WriteLn(
+      'Max: ',
+      MaxValue,
+      ' ($',
+      IntToHex(MaxValue, 8),
+      ')'
+    );
+
+    WriteLn(
+      'Unique values: ',
+      UniqueValues.Count
+    );
+
+    WriteLn(
+      'Consecutive links: ',
+      ConsecutiveLinks
+    );
+
+  finally
+    UniqueValues.Free;
   end;
 end;
 
