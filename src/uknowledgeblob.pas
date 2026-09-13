@@ -7,7 +7,7 @@ interface
 uses
   SysUtils,
   Classes,
-  uZstd, uCharacterData;
+  uZstd, uCharacterData, uBDB;
 
 type
     TOwnerIDArray = array of Cardinal;
@@ -404,6 +404,8 @@ var
   I, J: Integer;
   Offset : Integer;
   Name : string;
+  Header: TBDBHeader;
+
 begin
   Owners :=
     ListKnowledgeOwners(
@@ -460,6 +462,8 @@ begin
          DumpBytesAround(Blob, $000A1BC4, 0, 128);
          DumpBytesAround(Blob, $000A23BC, 0, 128);
          DumpBytesAround(Blob, $000A2854, 0, 128);
+         if ParseBDBHeader(Blob, Header)
+            then DumpBDBSections(Blob, Header);
     end else if (Name = 'Virgin')
     then begin
          WriteLn('Dump Virgin');
@@ -469,6 +473,8 @@ begin
          DumpBytesAround(Blob, $8D710, 0, 128);
          DumpBytesAround(Blob, $8D80C, 0, 128);
          DumpBytesAround(Blob, $8D8AC, 0, 128);
+         if ParseBDBHeader(Blob, Header)
+            then DumpBDBSections(Blob, Header);
     end;
   end;
 end;

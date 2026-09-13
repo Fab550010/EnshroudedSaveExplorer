@@ -11,38 +11,38 @@ type
   TBDBHeader = record
     HeaderSize: Cardinal;
 
-    Value08: Cardinal;
-    Value0C: Cardinal;
-    Value10: Cardinal;
+    Unknown08: Cardinal;
+    Unknown0C: Cardinal;
+    Unknown10: Cardinal;
 
-    Section1Offset: Cardinal;
-    Section1Count: Cardinal;
+    Unknown1C: Cardinal;
+    Unknown20: Cardinal;
+    Unknown24: Cardinal;
+    Unknown28: Cardinal;
 
-    Section2Offset: Cardinal;
-    Section2Count: Cardinal;
+    Unknown3C: Cardinal;
+    Unknown40: Cardinal;
+    Unknown44: Cardinal;
+    Unknown48: Cardinal;
+    Unknown4C: Cardinal;
+    Unknown50: Cardinal;
 
-    Section3Offset: Cardinal;
-    Section3Count: Cardinal;
-
-    Section4Offset: Cardinal;
-    Section4Count: Cardinal;
-
-    Section5Offset: Cardinal;
-    Section5Count: Cardinal;
-
-    Section6Offset: Cardinal;
-    Section6Count: Cardinal;
-
-    Section7Offset: Cardinal;
-    Section7Count: Cardinal;
-
-    Section8Offset: Cardinal;
+    Unknown5C: Cardinal;
+    Unknown60: Cardinal;
+    Unknown64: Cardinal;
+    Unknown68: Cardinal;
+    Unknown6C: Cardinal;
   end;
 
 function ParseBDBHeader(
     const Data: TBytes;
     out Header: TBDBHeader
   ): Boolean;
+
+procedure DumpBDBSections(
+  const Data: TBytes;
+  const Header: TBDBHeader
+);
 
 implementation
 
@@ -59,6 +59,48 @@ begin
     Result,
     SizeOf(Result)
   );
+end;
+
+procedure DumpUInt32Pairs(
+  const Data: TBytes;
+  Offset: Cardinal;
+  Count: Cardinal;
+  MaxCount: Cardinal
+);
+var
+  I, N: Cardinal;
+  A, B: Cardinal;
+begin
+  N := Count;
+
+  if N > MaxCount then
+    N := MaxCount;
+
+  for I := 0 to N - 1 do
+  begin
+    A := ReadUInt32LE(
+      Data,
+      Offset + I * 8
+    );
+
+    B := ReadUInt32LE(
+      Data,
+      Offset + I * 8 + 4
+    );
+
+    WriteLn(
+      I:4,
+      ': ',
+      IntToHex(A, 8),
+      '  ',
+      IntToHex(B, 8),
+      '  (',
+      A,
+      ', ',
+      B,
+      ')'
+    );
+  end;
 end;
 
 function ParseBDBHeader(
@@ -108,8 +150,146 @@ begin
 
   Header.Section8Offset := ReadUInt32LE(Data, $6C);
 
+  DumpUInt32Pairs(
+  Blob,
+  Header.Unknown1C,
+  Header.Unknown20,
+  30
+);
+
+DumpUInt32Pairs(
+  Blob,
+  Header.Unknown44,
+  Header.Unknown48,
+  30
+);
+
+DumpUInt32Pairs(
+  Blob,
+  Header.Unknown5C,
+  Header.Unknown60,
+  30
+);
+
+DumpUInt32Pairs(
+  Blob,
+  Header.Unknown64,
+  Header.Unknown68,
+  30
+);
+
   Result := True;
 end;
+
+procedure DumpSection(
+  const Name: string;
+  Offset: Cardinal;
+  Count: Cardinal;
+  NextOffset: Cardinal
+);
+var
+  Size: Int64;
+  BytesPerItem: Double;
+begin
+  Size :=
+    Int64(NextOffset) -
+    Int64(Offset);
+
+  Write(
+    Name,
+    ': offset=$',
+    IntToHex(Offset, 8),
+    ' count=',
+    Count,
+    ' size=',
+    Size
+  );
+
+  if Count > 0 then
+  begin
+    BytesPerItem :=
+      Size / Count;
+
+    Write(
+      ' bytes/item=',
+      FormatFloat(
+        '0.000',
+        BytesPerItem
+      )
+    );
+  end;
+
+  WriteLn;
+end;
+
+procedure DumpBDBSections(
+  const Data: TBytes;
+  const Header: TBDBHeader
+);
+begin
+  WriteLn('=== BDB1 SECTIONS ===');
+
+  DumpSection(
+    'Section1',
+    Header.Section1Offset,
+    Header.Section1Count,
+    Header.Section2Offset
+  );
+
+  DumpSection(
+    'Section2',
+    Header.Section2Offset,
+    Header.Section2Count,
+    Header.Section3Offset
+  );
+
+  DumpSection(
+    'Section3',
+    Header.Section3Offset,
+    Header.Section3Count,
+    Header.Section4Offset
+  );
+
+  DumpSection(
+    'Section4',
+    Header.Section4Offset,
+    Header.Section4Count,
+    Header.Section5Offset
+  );
+
+  DumpSection(
+    'Section5',
+    Header.Section5Offset,
+    Header.Section5Count,
+    Header.Section6Offset
+  );
+
+  DumpSection(
+    'Section6',
+    Header.Section6Offset,
+    Header.Section6Count,
+    Header.Section7Offset
+  );
+
+  DumpSection(
+    'Section7',
+    Header.Section7Offset,
+    Header.Section7Count,
+    Header.Section8Offset
+  );
+
+  WriteLn(
+    'Section8: offset=$',
+    IntToHex(
+      Header.Section8Offset,
+      8
+    ),
+    ' remaining=',
+    Length(Data) -
+      Header.Section8Offset
+  );
+end;
+
 
 end.
 
