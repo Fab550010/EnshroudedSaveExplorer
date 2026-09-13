@@ -462,8 +462,13 @@ begin
          DumpBytesAround(Blob, $000A1BC4, 0, 128);
          DumpBytesAround(Blob, $000A23BC, 0, 128);
          DumpBytesAround(Blob, $000A2854, 0, 128);
-         if ParseBDBHeader(Blob, Header)
-            then DumpBDBSections(Blob, Header);
+{         if ParseBDBHeader(Blob, Header)
+            then DumpBDBSections(Blob, Header);}
+         WriteLn('Pairs Dump');
+         DumpUInt32Pairs(Blob, Header.Unknown1C, Header.Unknown20, 30);
+         DumpUInt32Pairs(Blob, Header.Unknown44, Header.Unknown48, 30);
+         DumpUInt32Pairs(Blob, Header.Unknown5C, Header.Unknown60, 30);
+         DumpUInt32Pairs(Blob, Header.Unknown64, Header.Unknown68, 30);
     end else if (Name = 'Virgin')
     then begin
          WriteLn('Dump Virgin');
@@ -473,8 +478,13 @@ begin
          DumpBytesAround(Blob, $8D710, 0, 128);
          DumpBytesAround(Blob, $8D80C, 0, 128);
          DumpBytesAround(Blob, $8D8AC, 0, 128);
-         if ParseBDBHeader(Blob, Header)
-            then DumpBDBSections(Blob, Header);
+{         if ParseBDBHeader(Blob, Header)
+            then DumpBDBSections(Blob, Header);}
+         WriteLn('Pairs Dump');
+         {DumpUInt32Pairs(Blob, Header.Unknown1C, Header.Unknown20, 30);
+         DumpUInt32Pairs(Blob, Header.Unknown44, Header.Unknown48, 30);
+         DumpUInt32Pairs(Blob, Header.Unknown5C, Header.Unknown60, 30);
+         DumpUInt32Pairs(Blob, Header.Unknown64, Header.Unknown68, 30);}
     end;
   end;
 end;

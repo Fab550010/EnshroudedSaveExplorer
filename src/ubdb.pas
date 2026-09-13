@@ -14,11 +14,18 @@ type
     Unknown08: Cardinal;
     Unknown0C: Cardinal;
     Unknown10: Cardinal;
+    Unknown14: Cardinal;
+    Unknown18: Cardinal;
 
     Unknown1C: Cardinal;
     Unknown20: Cardinal;
     Unknown24: Cardinal;
     Unknown28: Cardinal;
+
+    Unknown2C: Cardinal;
+    Unknown30: Cardinal;
+    Unknown34: Cardinal;
+    Unknown38: Cardinal;
 
     Unknown3C: Cardinal;
     Unknown40: Cardinal;
@@ -27,6 +34,9 @@ type
     Unknown4C: Cardinal;
     Unknown50: Cardinal;
 
+    Unknown54: Cardinal;
+    Unknown58: Cardinal;
+
     Unknown5C: Cardinal;
     Unknown60: Cardinal;
     Unknown64: Cardinal;
@@ -34,14 +44,22 @@ type
     Unknown6C: Cardinal;
   end;
 
+
 function ParseBDBHeader(
     const Data: TBytes;
     out Header: TBDBHeader
   ): Boolean;
 
-procedure DumpBDBSections(
+{procedure DumpBDBSections(
   const Data: TBytes;
   const Header: TBDBHeader
+);}
+
+procedure DumpUInt32Pairs(
+  const Data: TBytes;
+  Offset: Cardinal;
+  Count: Cardinal;
+  MaxCount: Cardinal
 );
 
 implementation
@@ -123,64 +141,41 @@ begin
 
   Header.HeaderSize := ReadUInt32LE(Data, $04);
 
-  Header.Value08 := ReadUInt32LE(Data, $08);
-  Header.Value0C := ReadUInt32LE(Data, $0C);
-  Header.Value10 := ReadUInt32LE(Data, $10);
+  Header.Unknown08 := ReadUInt32LE(Data, $08);
+  Header.Unknown0C := ReadUInt32LE(Data, $0C);
+  Header.Unknown10 := ReadUInt32LE(Data, $10);
 
-  Header.Section1Offset := ReadUInt32LE(Data, $1C);
-  Header.Section1Count  := ReadUInt32LE(Data, $20);
+  Header.Unknown14 := ReadUInt32LE(Data, $14);
+  Header.Unknown18 := ReadUInt32LE(Data, $18);
 
-  Header.Section2Offset := ReadUInt32LE(Data, $24);
-  Header.Section2Count  := ReadUInt32LE(Data, $28);
+  Header.Unknown1C := ReadUInt32LE(Data, $1C);
+  Header.Unknown20 := ReadUInt32LE(Data, $20);
+  Header.Unknown24 := ReadUInt32LE(Data, $24);
+  Header.Unknown28 := ReadUInt32LE(Data, $28);
 
-  Header.Section3Offset := ReadUInt32LE(Data, $3C);
-  Header.Section3Count  := ReadUInt32LE(Data, $40);
+  Header.Unknown2C := ReadUInt32LE(Data, $2C);
+  Header.Unknown30 := ReadUInt32LE(Data, $30);
+  Header.Unknown34 := ReadUInt32LE(Data, $34);
+  Header.Unknown38 := ReadUInt32LE(Data, $38);
 
-  Header.Section4Offset := ReadUInt32LE(Data, $44);
-  Header.Section4Count  := ReadUInt32LE(Data, $48);
+  Header.Unknown3C := ReadUInt32LE(Data, $3C);
+  Header.Unknown40 := ReadUInt32LE(Data, $40);
+  Header.Unknown44 := ReadUInt32LE(Data, $44);
+  Header.Unknown48 := ReadUInt32LE(Data, $48);
+  Header.Unknown4C := ReadUInt32LE(Data, $4C);
+  Header.Unknown50 := ReadUInt32LE(Data, $50);
 
-  Header.Section5Offset := ReadUInt32LE(Data, $4C);
-  Header.Section5Count  := ReadUInt32LE(Data, $50);
+  Header.Unknown54 := ReadUInt32LE(Data, $54);
+  Header.Unknown58 := ReadUInt32LE(Data, $58);
 
-  Header.Section6Offset := ReadUInt32LE(Data, $5C);
-  Header.Section6Count  := ReadUInt32LE(Data, $60);
-
-  Header.Section7Offset := ReadUInt32LE(Data, $64);
-  Header.Section7Count  := ReadUInt32LE(Data, $68);
-
-  Header.Section8Offset := ReadUInt32LE(Data, $6C);
-
-  DumpUInt32Pairs(
-  Blob,
-  Header.Unknown1C,
-  Header.Unknown20,
-  30
-);
-
-DumpUInt32Pairs(
-  Blob,
-  Header.Unknown44,
-  Header.Unknown48,
-  30
-);
-
-DumpUInt32Pairs(
-  Blob,
-  Header.Unknown5C,
-  Header.Unknown60,
-  30
-);
-
-DumpUInt32Pairs(
-  Blob,
-  Header.Unknown64,
-  Header.Unknown68,
-  30
-);
+  Header.Unknown5C := ReadUInt32LE(Data, $5C);
+  Header.Unknown60 := ReadUInt32LE(Data, $60);
+  Header.Unknown64 := ReadUInt32LE(Data, $64);
+  Header.Unknown68 := ReadUInt32LE(Data, $68);
+  Header.Unknown6C := ReadUInt32LE(Data, $6C);
 
   Result := True;
 end;
-
 procedure DumpSection(
   const Name: string;
   Offset: Cardinal;
@@ -222,7 +217,7 @@ begin
   WriteLn;
 end;
 
-procedure DumpBDBSections(
+{procedure DumpBDBSections(
   const Data: TBytes;
   const Header: TBDBHeader
 );
@@ -288,7 +283,7 @@ begin
     Length(Data) -
       Header.Section8Offset
   );
-end;
+end;}
 
 
 end.
