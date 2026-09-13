@@ -7,6 +7,7 @@ object MainForm: TMainForm
   ClientHeight = 565
   ClientWidth = 891
   LCLVersion = '4.8.0.0'
+  OnCreate = FormCreate
   object TopPanel: TPanel
     Left = 0
     Height = 80

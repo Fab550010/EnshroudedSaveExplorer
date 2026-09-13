@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
   Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator,
-  uLocalization;
+  uLocalization, USaveIndex, uSteamDiscovery;
 
 type
 
@@ -31,6 +31,7 @@ type
     LoreGrid: TStringGrid;
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure LoreFilterChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
@@ -50,6 +51,7 @@ type
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid;
     procedure PopulateLoreGrid;
+    procedure LoadCharactersFile(const Filename : string);
   public
     destructor Destroy; override;
   end;
@@ -68,6 +70,65 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+procedure TMainForm.LoadCharactersFile(
+  const FileName: string
+);
+var
+  Blob: TBytes;
+  I: Integer;
+  Knowledge: TKnowledgeItems;
+begin
+  LoadTestJournal;
+  LoadTestLocalization;
+
+  FSaveFileName := FileName;
+
+  Caption := FSaveFileName;
+
+  FOwners :=
+    ListKnowledgeOwners(
+      FSaveFileName
+    );
+
+  CharacterComboBox.Clear;
+
+  for I := 0 to High(FOwners) do begin
+      Blob := ExtractKnowledgeBlob(FSaveFileName, FOwners[I]);
+
+      ParseKnowledgeBlob(Blob, Knowledge);
+
+    CharacterComboBox.Items.Add(
+      Format(
+        '%s (%d KNOW entries)',
+        [
+          IntToHex(FOwners[I], 8),
+          Length(Knowledge)
+        ]
+      )
+    );
+
+  end;
+
+  if Length(FOwners) > 0 then
+  begin
+    CharacterComboBox.ItemIndex := 0;
+
+    CharacterComboBoxChange(
+      CharacterComboBox
+    );
+  end;
+
+  if CharacterComboBox.Items.Count > 0 then
+  begin
+    CharacterComboBox.ItemIndex := 0;
+    CharacterComboBoxChange(CharacterComboBox);
+  end
+  else begin
+    QuestGrid.RowCount := 1;
+    LoreGrid.RowCount := 1;
+  end;
+end;
 
 function LoreStatusSortRank(
   Status: TLoreStatus
@@ -660,54 +721,9 @@ begin
   if not OpenSaveDialog.Execute then
     Exit;
 
-  LoadTestJournal;
-  LoadTestLocalization;
-
-  Caption := OpenSaveDialog.FileName;
-
-  FSaveFileName :=
-    OpenSaveDialog.FileName;
-
-  FOwners :=
-    ListKnowledgeOwners(
-      FSaveFileName
-    );
-
-  CharacterComboBox.Clear;
-
-  for I := 0 to High(FOwners) do
-  begin
-    Blob :=
-      ExtractKnowledgeBlob(
-        FSaveFileName,
-        FOwners[I]
-      );
-
-    ParseKnowledgeBlob(
-      Blob,
-      Knowledge
-    );
-
-    CharacterComboBox.Items.Add(
-      Format(
-        '%s (%d KNOW entries)',
-        [
-          IntToHex(FOwners[I], 8),
-          Length(Knowledge)
-        ]
-      )
-    );
-  end;
-
-  if CharacterComboBox.Items.Count > 0 then
-  begin
-    CharacterComboBox.ItemIndex := 0;
-    CharacterComboBoxChange(CharacterComboBox);
-  end
-  else begin
-    QuestGrid.RowCount := 1;
-    LoreGrid.RowCount := 1;
-  end;
+  LoadCharactersFile(
+    OpenSaveDialog.FileName
+  );
 end;
 
 procedure TMainForm.CharacterComboBoxChange(Sender: TObject);
@@ -739,6 +755,39 @@ begin
 
   PopulateQuestGrid;
   PopulateLoreGrid;
+end;
+
+procedure TMainForm.FormCreate(
+  Sender: TObject
+);
+var
+  IndexFileName: string;
+  CharactersFileName: string;
+begin
+  if not FindEnshroudedCharactersIndex(
+           IndexFileName
+         )
+  then
+    Exit;
+
+  try
+    CharactersFileName :=
+      ResolveCharactersSave(
+        IndexFileName
+      );
+
+    LoadCharactersFile(
+      CharactersFileName
+    );
+
+  except
+    on E: Exception do
+      ShowMessage(
+        'Unable to automatically load Enshrouded save:' +
+        LineEnding +
+        E.Message
+      );
+  end;
 end;
 
 procedure TMainForm.LoreFilterChange(Sender: TObject);
