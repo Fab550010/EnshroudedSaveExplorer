@@ -10,7 +10,7 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, umain, uKnowledgeBlob
+  Forms, umain, uKnowledgeBlob, uSaveIndex
   { you can add units after this };
 
 {$R *.res}

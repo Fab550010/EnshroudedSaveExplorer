@@ -192,6 +192,12 @@ procedure DumpLoreProgress(
   const Localization: TLocalizationItems
 );
 
+procedure DumpTutorialRequirementStats(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+
 implementation
 
 function LoreStatusText(
@@ -2407,5 +2413,258 @@ begin
   WriteLn('Lore object not found: $', IntToHex(LoreID, 8));
 end;
 
+procedure DumpTutorialRequirementStats(
+  JournalRoot: TJSONData;
+  const Knowledge: TKnowledgeItems;
+  const Localization: TLocalizationItems
+);
+var
+  Objects: TQuestObjectArray;
+  Obj: TJSONObject;
+  Metadata: TJournalObjectMetadata;
+
+  EntriesNode: TJSONData;
+  Entries: TJSONArray;
+  EntryObj: TJSONObject;
+
+  RequirementNode: TJSONData;
+  RequirementObj: TJSONObject;
+
+  I, J: Integer;
+
+  TutorialCount: Integer;
+  TutorialEntryCount: Integer;
+
+  TopLevelKnowPresent: Integer;
+  TopLevelKnowNonZero: Integer;
+
+  StandardRequirementCount: Integer;
+  NoRequirementCount: Integer;
+  OtherRequirementCount: Integer;
+
+  RequirementID: QWord;
+  RequirementType: string;
+  CompareOperator: string;
+  CompareValue: QWord;
+
+  KnowValue: Cardinal;
+
+  EntryID: QWord;
+  EntryNameID: QWord;
+  EntryName: string;
+begin
+  SetLength(Objects, 0);
+
+  CollectQuestObjects(
+    JournalRoot,
+    Objects
+  );
+
+  TutorialCount := 0;
+  TutorialEntryCount := 0;
+
+  TopLevelKnowPresent := 0;
+  TopLevelKnowNonZero := 0;
+
+  StandardRequirementCount := 0;
+  NoRequirementCount := 0;
+  OtherRequirementCount := 0;
+
+  WriteLn;
+  WriteLn('=== TUTORIAL REQUIREMENT DIAGNOSTIC ===');
+  WriteLn;
+
+  for I := 0 to High(Objects) do
+  begin
+    Obj := Objects[I];
+
+    Metadata :=
+      ReadJournalObjectMetadata(
+        Obj,
+        Knowledge,
+        Localization
+      );
+
+    if Metadata.Family <> jfTutorial then
+      Continue;
+
+    Inc(TutorialCount);
+
+    Write(
+      Metadata.Name,
+      ' | $',
+      IntToHex(Metadata.ID, 8),
+      ' | entries=',
+      Metadata.EntryCount
+    );
+
+    if Metadata.DirectKnowFound then
+    begin
+      Inc(TopLevelKnowPresent);
+
+      Write(
+        ' | top KNOW=',
+        Metadata.DirectKnowValue
+      );
+
+      if Metadata.DirectKnowValue <> 0 then
+        Inc(TopLevelKnowNonZero);
+    end
+    else
+      Write(' | top KNOW=absent');
+
+    WriteLn;
+
+    EntriesNode := Obj.Find('entries');
+
+    if
+      (EntriesNode = nil) or
+      (EntriesNode.JSONType <> jtArray)
+    then
+      Continue;
+
+    Entries := TJSONArray(EntriesNode);
+
+    for J := 0 to Entries.Count - 1 do
+    begin
+      if Entries.Items[J].JSONType <> jtObject then
+        Continue;
+
+      Inc(TutorialEntryCount);
+
+      EntryObj :=
+        TJSONObject(
+          Entries.Items[J]
+        );
+
+      EntryID :=
+        GetNestedUInt(
+          EntryObj,
+          'entryId',
+          'value',
+          0
+        );
+
+      EntryNameID :=
+        GetNestedUInt(
+          EntryObj,
+          'name',
+          'value',
+          0
+        );
+
+      EntryName :=
+        Localize(
+          Localization,
+          EntryNameID
+        );
+
+      RequirementNode :=
+        EntryObj.Find('knowledgeRequirement');
+
+      Write(
+        '  - ',
+        EntryName,
+        ' [$',
+        IntToHex(EntryID, 8),
+        ']'
+      );
+
+      if
+        (RequirementNode = nil) or
+        (RequirementNode.JSONType <> jtObject)
+      then
+      begin
+        Inc(NoRequirementCount);
+
+        WriteLn(
+          ' | requirement=(none)'
+        );
+
+        Continue;
+      end;
+
+      RequirementObj :=
+        TJSONObject(
+          RequirementNode
+        );
+
+      RequirementID :=
+        GetNestedUInt(
+          RequirementObj,
+          'knowledgeOrQueryId',
+          'value',
+          0
+        );
+
+      RequirementType :=
+        GetStringField(
+          RequirementObj,
+          'type',
+          ''
+        );
+
+      CompareOperator :=
+        GetStringField(
+          RequirementObj,
+          'compareOperator',
+          ''
+        );
+
+      CompareValue :=
+        GetUIntField(
+          RequirementObj,
+          'compareValue',
+          0
+        );
+
+      Write(
+        ' | req=$',
+        IntToHex(RequirementID, 8),
+        ' ',
+        RequirementType,
+        ' ',
+        CompareOperator,
+        ' ',
+        CompareValue
+      );
+
+      if
+        (RequirementID <> 0) and
+        (RequirementID <= High(Cardinal)) and
+        FindKnowledgeValue(
+          Knowledge,
+          Cardinal(RequirementID),
+          KnowValue
+        )
+      then
+        Write(' | KNOW=', KnowValue)
+      else
+        Write(' | KNOW=absent');
+
+      WriteLn;
+
+      if
+        SameText(RequirementType, 'SimpleBool') and
+        SameText(CompareOperator, 'Equals') and
+        (CompareValue = 1) and
+        (RequirementID <> 0)
+      then
+        Inc(StandardRequirementCount)
+      else
+        Inc(OtherRequirementCount);
+    end;
+  end;
+
+  WriteLn;
+  WriteLn('=== SUMMARY ===');
+  WriteLn('Tutorial objects           : ', TutorialCount);
+  WriteLn('Tutorial entries           : ', TutorialEntryCount);
+  WriteLn('Top-level KNOW present     : ', TopLevelKnowPresent);
+  WriteLn('Top-level KNOW non-zero    : ', TopLevelKnowNonZero);
+  WriteLn('SimpleBool Equals 1        : ', StandardRequirementCount);
+  WriteLn('No knowledge requirement   : ', NoRequirementCount);
+  WriteLn('Other requirement          : ', OtherRequirementCount);
+end;
 
 end.

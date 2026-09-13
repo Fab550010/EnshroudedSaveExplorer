@@ -1470,6 +1470,12 @@ begin
                      Localization
                      );
 
+    DumpTutorialRequirementStats(
+                                  JournalRoot,
+                                  Knowledge,
+                                  Localization
+                                 );
+
   finally
     JournalRoot.Free;
   end;
