@@ -405,6 +405,8 @@ var
   Offset : Integer;
   Name : string;
   Header: TBDBHeader;
+  StringPoolStart, AfterStringPool : Cardinal;
+  Strings : TBDBStringArray;
 
 begin
   Owners :=
@@ -470,6 +472,22 @@ begin
                    DumpUInt32Pairs(Blob, Header.Unknown44, Header.Unknown48, 30);
                    DumpUInt32Pairs(Blob, Header.Unknown5C, Header.Unknown60, 30);
                    DumpUInt32Pairs(Blob, Header.Unknown64, Header.Unknown68, 30);
+                   WriteLn('Dump occ');
+                   FindUInt32Occurrences(Blob, $00059DE0);
+                   FindUInt32Occurrences(Blob, $00059DD8);
+                   FindUInt32Occurrences(Blob, Header.Unknown08);
+{                   WriteLn('Root block:');
+                   DumpUInt32Block(Blob, Header.Unknown3C, 16);
+                   WriteLn('=== ROOT STRING POOL ===');
+                   DumpStringPool(Blob, Header.Unknown3C + $3C, 1024);
+                   StringPoolStart := Header.Unknown3C + $3C;
+                   if ParseBDBStringPool(Blob, StringPoolStart, Strings, AfterStringPool)
+                      then
+                          begin
+                               WriteLn('String pool ends at $', IntToHex(AfterStringPool, 8));
+                               WriteLn('String count: ', Length(Strings));
+                          end;
+                   DumpUInt32Values(Blob, AfterStringPool, 80);}
             end;
     end else if (Name = 'Virgin')
     then begin
@@ -488,6 +506,16 @@ begin
                  DumpUInt32Pairs(Blob, Header.Unknown44, Header.Unknown48, 30);
                  DumpUInt32Pairs(Blob, Header.Unknown5C, Header.Unknown60, 30);
                  DumpUInt32Pairs(Blob, Header.Unknown64, Header.Unknown68, 30);
+                 WriteLn('Root block:');
+{                 DumpUInt32Block(Blob, Header.Unknown3C, 16);
+                 StringPoolStart := Header.Unknown3C + $3C;
+                   if ParseBDBStringPool(Blob, StringPoolStart, Strings, AfterStringPool)
+                      then
+                          begin
+                               WriteLn('String pool ends at $', IntToHex(AfterStringPool, 8));
+                               WriteLn('String count: ', Length(Strings));
+                          end;
+                   DumpUInt32Values(Blob, AfterStringPool, 80);}
             end;
     end;
   end;

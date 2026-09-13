@@ -27,8 +27,9 @@ type
     Unknown34: Cardinal;
     Unknown38: Cardinal;
 
-    Unknown3C: Cardinal;
-    Unknown40: Cardinal;
+    RootOffset: Cardinal;
+    StringPoolSize: Cardinal;
+
     Unknown44: Cardinal;
     Unknown48: Cardinal;
     Unknown4C: Cardinal;
@@ -43,6 +44,10 @@ type
     Unknown68: Cardinal;
     Unknown6C: Cardinal;
   end;
+
+
+type
+  TBDBStringArray = array of string;
 
 
 function ParseBDBHeader(
@@ -60,6 +65,36 @@ procedure DumpUInt32Pairs(
   Offset: Cardinal;
   Count: Cardinal;
   MaxCount: Cardinal
+);
+
+procedure FindUInt32Occurrences(
+  const Data: TBytes;
+  Value: Cardinal
+);
+
+procedure DumpUInt32Block(
+  const Data: TBytes;
+  Offset: Cardinal;
+  Count: Cardinal
+);
+
+procedure DumpStringPool(
+  const Data: TBytes;
+  StartOffset: Cardinal;
+  MaxBytes: Cardinal
+);
+
+function ParseBDBStringPool(
+  const Data: TBytes;
+  StartOffset: Cardinal;
+  out Strings: TBDBStringArray;
+  out EndOffset: Cardinal
+): Boolean;
+
+procedure DumpUInt32Values(
+  const Data: TBytes;
+  Offset: Cardinal;
+  Count: Cardinal
 );
 
 implementation
@@ -121,6 +156,326 @@ begin
   end;
 end;
 
+procedure DumpStringPool(
+  const Data: TBytes;
+  StartOffset: Cardinal;
+  MaxBytes: Cardinal
+);
+var
+  Pos: Cardinal;
+  EndPos: Cardinal;
+  L: Word;
+  I: Cardinal;
+  S: string;
+  Printable: Boolean;
+begin
+  Pos := StartOffset;
+
+  EndPos := StartOffset + MaxBytes;
+  if EndPos > Cardinal(Length(Data)) then
+    EndPos := Length(Data);
+
+  while Pos + 2 <= EndPos do
+  begin
+    L :=
+      Word(Data[Pos]) or
+      (Word(Data[Pos + 1]) shl 8);
+
+    if L = 0 then
+    begin
+      WriteLn(
+        '$',
+        IntToHex(Pos, 8),
+        '  len=0'
+      );
+
+      Inc(Pos, 2);
+      Continue;
+    end;
+
+    if Pos + 2 + L > EndPos then
+    begin
+      WriteLn(
+        '$',
+        IntToHex(Pos, 8),
+        '  invalid length=',
+        L
+      );
+      Break;
+    end;
+
+    Printable := True;
+
+    for I := 0 to L - 1 do
+      if
+        (Data[Pos + 2 + I] < 32) or
+        (Data[Pos + 2 + I] > 126)
+      then
+      begin
+        Printable := False;
+        Break;
+      end;
+
+    if not Printable then
+    begin
+      WriteLn(
+        '$',
+        IntToHex(Pos, 8),
+        '  non-string, length candidate=',
+        L
+      );
+      Break;
+    end;
+
+    SetLength(S, L);
+
+    for I := 0 to L - 1 do
+      S[I + 1] :=
+        Chr(
+          Data[Pos + 2 + I]
+        );
+
+    WriteLn(
+      '$',
+      IntToHex(Pos, 8),
+      '  len=',
+      L:2,
+      '  "',
+      S,
+      '"'
+    );
+
+    Inc(
+      Pos,
+      2 + L
+    );
+
+    { les chaînes impaires sont alignées sur 2 octets }
+    if Odd(L) then
+    begin
+      WriteLn(
+        '           padding=$',
+        IntToHex(Data[Pos], 2)
+      );
+
+      Inc(Pos);
+    end;
+  end;
+
+  WriteLn(
+    'String parsing stopped at $',
+    IntToHex(Pos, 8)
+  );
+end;
+
+procedure DumpUInt32Values(
+  const Data: TBytes;
+  Offset: Cardinal;
+  Count: Cardinal
+);
+var
+  I: Cardinal;
+  V: Cardinal;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    if Offset + I * 4 + 3 >= Cardinal(Length(Data)) then
+      Exit;
+
+    V :=
+      ReadUInt32LE(
+        Data,
+        Offset + I * 4
+      );
+
+    WriteLn(
+      I:4,
+      '  $',
+      IntToHex(
+        Offset + I * 4,
+        8
+      ),
+      '  ',
+      V,
+      '  ($',
+      IntToHex(V, 8),
+      ')'
+    );
+  end;
+end;
+
+function ParseBDBStringPool(
+  const Data: TBytes;
+  StartOffset: Cardinal;
+  out Strings: TBDBStringArray;
+  out EndOffset: Cardinal
+): Boolean;
+var
+  Pos: Cardinal;
+  L: Word;
+  I: Cardinal;
+  S: string;
+begin
+  Result := False;
+
+  SetLength(Strings, 0);
+  EndOffset := StartOffset;
+  Pos := StartOffset;
+
+  while Pos + 2 <= Cardinal(Length(Data)) do
+  begin
+    L :=
+      Word(Data[Pos]) or
+      (Word(Data[Pos + 1]) shl 8);
+
+    Inc(Pos, 2);
+
+    { chaîne vide = fin du pool }
+    if L = 0 then
+    begin
+      EndOffset := Pos;
+      Result := True;
+      Exit;
+    end;
+
+    if Pos + L > Cardinal(Length(Data)) then
+      Exit;
+
+    SetLength(S, L);
+
+    for I := 0 to L - 1 do
+    begin
+      if
+        (Data[Pos + I] < 32) or
+        (Data[Pos + I] > 126)
+      then
+        Exit;
+
+      S[I + 1] :=
+        Chr(Data[Pos + I]);
+    end;
+
+    SetLength(
+      Strings,
+      Length(Strings) + 1
+    );
+
+    Strings[High(Strings)] := S;
+
+    Inc(Pos, L);
+
+    if Odd(L) then
+    begin
+      if Pos >= Cardinal(Length(Data)) then
+        Exit;
+
+      Inc(Pos);
+    end;
+  end;
+end;
+
+procedure DumpUInt32Block(
+  const Data: TBytes;
+  Offset: Cardinal;
+  Count: Cardinal
+);
+var
+  I: Cardinal;
+  V: Cardinal;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    V :=
+      ReadUInt32LE(
+        Data,
+        Offset + I * 4
+      );
+
+    WriteLn(
+      I:2,
+      ' +$',
+      IntToHex(I * 4, 2),
+      ': $',
+      IntToHex(V, 8),
+      ' (',
+      V,
+      ')'
+    );
+  end;
+end;
+
+procedure FindUInt32Occurrences(
+  const Data: TBytes;
+  Value: Cardinal
+);
+var
+  I: Integer;
+  V: Cardinal;
+begin
+  WriteLn(
+    'Searching uint32 $',
+    IntToHex(Value, 8),
+    ' (',
+    Value,
+    ')'
+  );
+
+  for I := 0 to Length(Data) - 4 do
+  begin
+    Move(
+      Data[I],
+      V,
+      SizeOf(V)
+    );
+
+    if V = Value then
+      WriteLn(
+        '  offset=$',
+        IntToHex(I, 8)
+      );
+  end;
+end;
+
+function BDBStringPoolOffset(
+  const Header: TBDBHeader
+): Cardinal;
+begin
+  Result :=
+    Header.RootOffset + $3C;
+end;
+
+
+function BDBDataAfterStringPoolOffset(
+  const Header: TBDBHeader
+): Cardinal;
+begin
+  Result :=
+    BDBStringPoolOffset(Header) +
+    Header.StringPoolSize +
+    2;
+end;
+
+function ValidateBDBStringPool(
+  const Data: TBytes;
+  const Header: TBDBHeader
+): Boolean;
+var
+  TerminatorOffset: Cardinal;
+begin
+  Result := False;
+
+  TerminatorOffset :=
+    BDBStringPoolOffset(Header) +
+    Header.StringPoolSize;
+
+  if TerminatorOffset + 1 >= Cardinal(Length(Data)) then
+    Exit;
+
+  Result :=
+    (Data[TerminatorOffset] = 0) and
+    (Data[TerminatorOffset + 1] = 0);
+end;
+
 function ParseBDBHeader(
   const Data: TBytes;
   out Header: TBDBHeader
@@ -158,8 +513,9 @@ begin
   Header.Unknown34 := ReadUInt32LE(Data, $34);
   Header.Unknown38 := ReadUInt32LE(Data, $38);
 
-  Header.Unknown3C := ReadUInt32LE(Data, $3C);
-  Header.Unknown40 := ReadUInt32LE(Data, $40);
+  Header.RootOffset := ReadUInt32LE(Data, $3C);
+  Header.StringPoolSize := ReadUInt32LE(Data, $40);
+
   Header.Unknown44 := ReadUInt32LE(Data, $44);
   Header.Unknown48 := ReadUInt32LE(Data, $48);
   Header.Unknown4C := ReadUInt32LE(Data, $4C);
