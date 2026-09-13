@@ -15,13 +15,15 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    QuestsStatusFilterComboBox: TComboBox;
+    QuestsSummaryLabel: TLabel;
     LoreSummaryLabel: TLabel;
     LoreStatusFilterComboBox: TComboBox;
     MainPageControl: TPageControl;
     LoreControlPanel: TPanel;
+    QuestsControlPanel: TPanel;
     QuestStatusFilterComboBox: TComboBox;
     QuestTypeFilterCombobox: TComboBox;
-    QuestSummaryLabel: TLabel;
     OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
     QuestGrid: TStringGrid;
@@ -35,6 +37,7 @@ type
     procedure QuestFilterChange(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure LoreGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
+    procedure QuestsFilterChange(Sender: TObject);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -444,6 +447,11 @@ begin
   PopulateLoreGrid;
 end;
 
+procedure TMainForm.QuestsFilterChange(Sender: TObject);
+begin
+
+end;
+
 
 procedure TMainForm.LoadTestJournal;
 var
@@ -622,7 +630,7 @@ begin
 
       Inc(Row);
     end;
-    QuestSummaryLabel.Caption :=
+    QuestsSummaryLabel.Caption :=
                               Format(
                                      'PlayerQuest %d/%d - WorldQuest %d/%d - Auto %d/%d',
                                      [

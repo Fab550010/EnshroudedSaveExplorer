@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 2835
+  Left = 2615
   Height = 565
-  Top = 424
+  Top = 459
   Width = 891
   Caption = 'MainForm'
   ClientHeight = 565
@@ -25,13 +25,6 @@ object MainForm: TMainForm
       Caption = 'Open Characters File'
       TabOrder = 0
       OnClick = OpenSaveButtonClick
-    end
-    object QuestSummaryLabel: TLabel
-      Left = 16
-      Height = 15
-      Top = 17
-      Width = 87
-      Caption = 'No quest loaded'
     end
     object QuestTypeFilterCombobox: TComboBox
       Left = 392
@@ -85,9 +78,9 @@ object MainForm: TMainForm
     Height = 485
     Top = 80
     Width = 891
-    ActivePage = LoreTabSheet
+    ActivePage = QuestTabSheet
     Align = alClient
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 1
     object QuestTabSheet: TTabSheet
       Caption = 'Quests'
@@ -95,8 +88,8 @@ object MainForm: TMainForm
       ClientWidth = 883
       object QuestGrid: TStringGrid
         Left = 0
-        Height = 457
-        Top = 0
+        Height = 421
+        Top = 36
         Width = 883
         Align = alClient
         ColCount = 4
@@ -122,6 +115,43 @@ object MainForm: TMainForm
         RowCount = 2
         TabOrder = 0
         OnHeaderClick = QuestGridHeaderClick
+      end
+      object QuestsControlPanel: TPanel
+        Left = 0
+        Height = 36
+        Top = 0
+        Width = 883
+        Align = alTop
+        ClientHeight = 36
+        ClientWidth = 883
+        TabOrder = 1
+        object QuestsSummaryLabel: TLabel
+          Left = 795
+          Height = 34
+          Top = 1
+          Width = 87
+          Align = alRight
+          Caption = 'No quest loaded'
+        end
+        object QuestsStatusFilterComboBox: TComboBox
+          Left = 8
+          Height = 23
+          Top = 8
+          Width = 100
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'All statuses'
+            'Not completed'
+            'Completed personally'
+            'Resolved - origin unknown'
+            'Unknown'
+          )
+          Style = csDropDownList
+          TabOrder = 0
+          Text = 'All statuses'
+          OnChange = QuestsFilterChange
+        end
       end
     end
     object LoreTabSheet: TTabSheet
