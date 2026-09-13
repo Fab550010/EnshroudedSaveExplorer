@@ -22,7 +22,6 @@ type
     MainPageControl: TPageControl;
     LoreControlPanel: TPanel;
     QuestsControlPanel: TPanel;
-    QuestStatusFilterComboBox: TComboBox;
     QuestTypeFilterCombobox: TComboBox;
     OpenSaveDialog: TOpenDialog;
     OpenSaveButton: TButton;
@@ -34,7 +33,6 @@ type
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure LoreFilterChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
-    procedure QuestFilterChange(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure LoreGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure QuestsFilterChange(Sender: TObject);
@@ -449,7 +447,10 @@ end;
 
 procedure TMainForm.QuestsFilterChange(Sender: TObject);
 begin
+     if Length(FKnowledge) = 0 then
+        Exit;
 
+     PopulateQuestGrid;
 end;
 
 
@@ -546,6 +547,37 @@ begin
     begin
       if Metadata[I].Family <> jfQuest then
         Continue;
+
+      Inc(QuestCount);
+
+      case Metadata[I].PersonalStatus of
+           qpsCompletedPersonally: Inc(CompletedCount);
+           qpsNotCompleted: Inc(NotCompletedCount);
+           qpsResolvedUnknownOrigin: Inc(ResolvedUnknownCount);
+      end;
+
+      if SameText(Metadata[I].RawType, 'PlayerQuest') then
+         begin
+              Inc(PlayerQuestCount);
+
+              if Metadata[I].PersonalStatus = qpsCompletedPersonally then
+                 Inc(PlayerQuestCompletedCount);
+         end
+         else if SameText(Metadata[I].RawType, 'WorldQuest') then
+              begin
+                   Inc(WorldQuestCount);
+
+                   if Metadata[I].PersonalStatus = qpsCompletedPersonally then
+                      Inc(WorldQuestCompletedCount);
+              end
+         else if SameText(Metadata[I].RawType, 'Auto') then
+              begin
+                   Inc(AutoQuestCount);
+
+                   if Metadata[I].PersonalStatus = qpsResolvedUnknownOrigin then
+                      Inc(AutoQuestResolvedCount);
+              end;
+
       case QuestTypeFilterComboBox.ItemIndex of
            1:
              if not SameText(Metadata[I].RawType, 'Auto') then
@@ -559,7 +591,7 @@ begin
              if not SameText(Metadata[I].RawType, 'WorldQuest') then
                 Continue;
       end;
-      case QuestStatusFilterComboBox.ItemIndex of
+      case QuestsStatusFilterComboBox.ItemIndex of
            1:
              if Metadata[I].PersonalStatus <> qpsNotCompleted then
                 Continue;
@@ -571,40 +603,6 @@ begin
            3:
              if Metadata[I].PersonalStatus <> qpsResolvedUnknownOrigin then
                 Continue;
-      end;
-
-      Inc(QuestCount);
-      if SameText(Metadata[I].RawType, 'PlayerQuest') then
-         begin
-              Inc(PlayerQuestCount);
-
-              if Metadata[I].PersonalStatus = qpsCompletedPersonally then
-                 Inc(PlayerQuestCompletedCount);
-         end
-      else if SameText(Metadata[I].RawType, 'WorldQuest') then
-         begin
-              Inc(WorldQuestCount);
-
-              if Metadata[I].PersonalStatus = qpsCompletedPersonally then
-                 Inc(WorldQuestCompletedCount);
-         end
-      else if SameText(Metadata[I].RawType, 'Auto') then
-           begin
-                Inc(AutoQuestCount);
-
-                if Metadata[I].PersonalStatus = qpsResolvedUnknownOrigin then
-                   Inc(AutoQuestResolvedCount);
-           end;
-
-      case Metadata[I].PersonalStatus of
-        qpsCompletedPersonally:
-            Inc(CompletedCount);
-
-        qpsNotCompleted:
-            Inc(NotCompletedCount);
-
-        qpsResolvedUnknownOrigin:
-            Inc(ResolvedUnknownCount);
       end;
 
       case Metadata[I].PersonalStatus of
@@ -710,14 +708,6 @@ begin
     QuestGrid.RowCount := 1;
     LoreGrid.RowCount := 1;
   end;
-end;
-
-procedure TMainForm.QuestFilterChange(Sender: TObject);
-begin
-     if Length(FKnowledge) = 0 then
-        Exit;
-
-     PopulateQuestGrid;
 end;
 
 procedure TMainForm.CharacterComboBoxChange(Sender: TObject);

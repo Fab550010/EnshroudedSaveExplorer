@@ -13,7 +13,6 @@ object MainForm: TMainForm
     Top = 0
     Width = 891
     Align = alTop
-    Caption = 'TopPanel'
     ClientHeight = 80
     ClientWidth = 891
     TabOrder = 0
@@ -42,7 +41,7 @@ object MainForm: TMainForm
       Style = csDropDownList
       TabOrder = 1
       Text = 'All types'
-      OnChange = QuestFilterChange
+      Visible = False
     end
     object CharacterComboBox: TComboBox
       Left = 568
@@ -53,24 +52,6 @@ object MainForm: TMainForm
       Style = csDropDownList
       TabOrder = 2
       OnChange = CharacterComboBoxChange
-    end
-    object QuestStatusFilterComboBox: TComboBox
-      Left = 392
-      Height = 23
-      Top = 56
-      Width = 100
-      ItemHeight = 15
-      ItemIndex = 0
-      Items.Strings = (
-        'All statuses'
-        'Not completed'
-        'Completed personally'
-        'Resolved - origin unknown'
-      )
-      Style = csDropDownList
-      TabOrder = 3
-      Text = 'All statuses'
-      OnChange = QuestFilterChange
     end
   end
   object MainPageControl: TPageControl
@@ -137,7 +118,7 @@ object MainForm: TMainForm
           Left = 8
           Height = 23
           Top = 8
-          Width = 100
+          Width = 168
           ItemHeight = 15
           ItemIndex = 0
           Items.Strings = (
@@ -145,7 +126,6 @@ object MainForm: TMainForm
             'Not completed'
             'Completed personally'
             'Resolved - origin unknown'
-            'Unknown'
           )
           Style = csDropDownList
           TabOrder = 0
