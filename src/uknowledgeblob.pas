@@ -22,6 +22,8 @@ function ExtractCharacterBlob(const FileName: string; OwnerID: Cardinal): TBytes
 
 procedure DumpCharacterNames(const FileName: string);
 
+function GetBlobFromName(const FileName : string; Name : string) : TBytes;
+
 
 
 implementation
@@ -387,6 +389,20 @@ end;
     WriteLn;
   end;
 
+function GetBlobFromName(const FileName : string; Name : string) : TBytes;
+var
+   Owners : TOwnerIDArray;
+   Blob: TBytes;
+   I : integer;
+begin
+     Owners := ListKnowledgeOwners(FileName);
+     for I := 0 to High(Owners) do
+         begin
+              Blob := ExtractCharacterBlob(FileName, Owners[I]);
+              if ( ExtractCharacterName(Blob) = Name )
+                 then exit(Blob);
+         end;
+end;
 
 procedure DumpCharacterNames(
   const FileName: string
