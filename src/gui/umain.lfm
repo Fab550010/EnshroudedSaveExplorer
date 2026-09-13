@@ -1,21 +1,21 @@
 object MainForm: TMainForm
-  Left = 819
+  Left = 2835
   Height = 565
-  Top = 744
-  Width = 851
+  Top = 424
+  Width = 891
   Caption = 'MainForm'
   ClientHeight = 565
-  ClientWidth = 851
+  ClientWidth = 891
   LCLVersion = '4.8.0.0'
   object TopPanel: TPanel
     Left = 0
     Height = 80
     Top = 0
-    Width = 851
+    Width = 891
     Align = alTop
     Caption = 'TopPanel'
     ClientHeight = 80
-    ClientWidth = 851
+    ClientWidth = 891
     TabOrder = 0
     object OpenSaveButton: TButton
       Left = 384
@@ -84,7 +84,7 @@ object MainForm: TMainForm
     Left = 0
     Height = 485
     Top = 80
-    Width = 851
+    Width = 891
     ActivePage = LoreTabSheet
     Align = alClient
     TabIndex = 1
@@ -92,26 +92,30 @@ object MainForm: TMainForm
     object QuestTabSheet: TTabSheet
       Caption = 'Quests'
       ClientHeight = 457
-      ClientWidth = 843
+      ClientWidth = 883
       object QuestGrid: TStringGrid
         Left = 0
         Height = 457
         Top = 0
-        Width = 843
+        Width = 883
         Align = alClient
         ColCount = 4
         Columns = <        
           item
             Title.Caption = 'Name'
+            Width = 512
           end        
           item
             Title.Caption = 'Type'
+            Width = 128
           end        
           item
             Title.Caption = 'Status'
+            Width = 128
           end        
           item
             Title.Caption = 'ID'
+            Width = 92
           end>
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goColMoving, goDblClickAutoSize, goSmoothScroll]
@@ -123,32 +127,73 @@ object MainForm: TMainForm
     object LoreTabSheet: TTabSheet
       Caption = 'Lore'
       ClientHeight = 457
-      ClientWidth = 843
+      ClientWidth = 883
       object LoreGrid: TStringGrid
         Left = 0
-        Height = 457
-        Top = 0
-        Width = 843
+        Height = 421
+        Top = 36
+        Width = 883
         Align = alClient
         ColCount = 4
         Columns = <        
           item
             Title.Caption = 'Name'
+            Width = 512
           end        
           item
             Title.Caption = 'Progress'
+            Width = 128
           end        
           item
             Title.Caption = 'Status'
+            Width = 128
           end        
           item
             Title.Caption = 'ID'
+            Width = 92
           end>
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goColMoving, goDblClickAutoSize, goSmoothScroll, goRowHighlight]
         RowCount = 1
         TabOrder = 0
         OnHeaderClick = LoreGridHeaderClick
+      end
+      object LoreControlPanel: TPanel
+        Left = 0
+        Height = 36
+        Top = 0
+        Width = 883
+        Align = alTop
+        ClientHeight = 36
+        ClientWidth = 883
+        TabOrder = 1
+        object LoreStatusFilterComboBox: TComboBox
+          Left = 8
+          Height = 23
+          Top = 8
+          Width = 100
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'All statuses'
+            'Undiscovered'
+            'Partial'
+            'Complete'
+          )
+          Style = csDropDownList
+          TabOrder = 0
+          Text = 'All statuses'
+          OnChange = LoreFilterChange
+        end
+        object LoreSummaryLabel: TLabel
+          Left = 804
+          Height = 34
+          Top = 1
+          Width = 78
+          Align = alRight
+          Alignment = taCenter
+          Caption = 'No lore loaded'
+        end
       end
     end
   end

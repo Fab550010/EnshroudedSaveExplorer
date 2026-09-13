@@ -15,7 +15,10 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    LoreSummaryLabel: TLabel;
+    LoreStatusFilterComboBox: TComboBox;
     MainPageControl: TPageControl;
+    LoreControlPanel: TPanel;
     QuestStatusFilterComboBox: TComboBox;
     QuestTypeFilterCombobox: TComboBox;
     QuestSummaryLabel: TLabel;
@@ -27,6 +30,7 @@ type
     LoreGrid: TStringGrid;
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
+    procedure LoreFilterChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
     procedure QuestFilterChange(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
@@ -739,12 +743,24 @@ begin
   PopulateLoreGrid;
 end;
 
+procedure TMainForm.LoreFilterChange(Sender: TObject);
+begin
+     if Length(FKnowledge) = 0 then
+        Exit;
+
+     PopulateLoreGrid;
+end;
+
 procedure TMainForm.PopulateLoreGrid;
 var
   Metadata: TJournalObjectMetadataArray;
   I: Integer;
   Row: Integer;
   StatusText: string;
+  LoreCount: Integer;
+  UndiscoveredCount: Integer;
+  PartialCount: Integer;
+  CompleteCount: Integer;
 begin
   CollectJournalMetadata(
     FJournalRoot,
@@ -763,11 +779,28 @@ begin
   try
     LoreGrid.RowCount := 1;
     Row := 1;
+    LoreCount := 0;
+    UndiscoveredCount := 0;
+    PartialCount := 0;
+    CompleteCount := 0;
 
     for I := 0 to High(Metadata) do
     begin
       if Metadata[I].Family <> jfLore then
         Continue;
+
+      Inc(LoreCount);
+
+      case Metadata[I].LoreStatus of
+           lsUndiscovered: Inc(UndiscoveredCount);
+           lsPartial: Inc(PartialCount);
+           lsComplete: Inc(CompleteCount);
+      end;
+      case LoreStatusFilterComboBox.ItemIndex of
+           1: if Metadata[I].LoreStatus <> lsUndiscovered then Continue;
+           2: if Metadata[I].LoreStatus <> lsPartial then Continue;
+           3: if Metadata[I].LoreStatus <> lsComplete then Continue;
+      end;
 
       case Metadata[I].LoreStatus of
         lsUndiscovered:
@@ -805,6 +838,16 @@ begin
 
       Inc(Row);
     end;
+    LoreSummaryLabel.Caption :=
+                             Format(
+                                    'Lore: %d complete / %d partial / %d undiscovered - %d total',
+                                    [
+                                           CompleteCount,
+                                           PartialCount,
+                                           UndiscoveredCount,
+                                           LoreCount
+                                    ]
+                             );
   finally
     LoreGrid.EndUpdate;
   end;
