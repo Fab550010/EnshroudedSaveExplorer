@@ -7,7 +7,7 @@ interface
 uses
   SysUtils,
   Classes,
-  uZstd;
+  uZstd, uCharacterData;
 
 type
     TOwnerIDArray = array of Cardinal;
@@ -15,6 +15,12 @@ type
 function ListKnowledgeOwners(const FileName: string): TOwnerIDArray;
 
 function ExtractKnowledgeBlob(const FileName: string; OwnerID: Cardinal): TBytes;
+
+procedure DumpBlobInventory(const FileName: string);
+
+function ExtractCharacterBlob(const FileName: string; OwnerID: Cardinal): TBytes;
+
+procedure DumpCharacterNames(const FileName: string);
 
 
 
@@ -57,6 +63,157 @@ begin
     (Ord(T[3]) = $F0);
 end;
 
+function IsCharBlob(
+  const T: array of AnsiChar
+): Boolean;
+begin
+  Result :=
+    (T[0] = 'C') and
+    (T[1] = 'H') and
+    (T[2] = 'A') and
+    (T[3] = 'R');
+end;
+
+function ExtractBlob(
+  const FileName: string;
+  OwnerID: Cardinal;
+  BlobKind: Integer
+): TBytes;
+var
+  F: TFileStream;
+  Header: TKSCHeader;
+  Entries: TKSCBlobEntryArray;
+  I: Integer;
+  DataOffset: Int64;
+  CompressedData: TBytes;
+  Matches: Boolean;
+begin
+  SetLength(Result, 0);
+
+  F :=
+    TFileStream.Create(
+      FileName,
+      fmOpenRead or fmShareDenyNone
+    );
+
+  try
+    if F.Size < SizeOf(TKSCHeader) then
+      raise Exception.Create(
+        'File too small'
+      );
+
+    F.ReadBuffer(
+      Header,
+      SizeOf(Header)
+    );
+
+    if not IsKSC1(Header) then
+      raise Exception.Create(
+        'Not a KSC1 file'
+      );
+
+    SetLength(
+      Entries,
+      Header.BlobCount
+    );
+
+    for I := 0 to Header.BlobCount - 1 do
+      F.ReadBuffer(
+        Entries[I],
+        SizeOf(TKSCBlobEntry)
+      );
+
+    DataOffset :=
+      SizeOf(TKSCHeader) +
+      Int64(Header.BlobCount) *
+      SizeOf(TKSCBlobEntry);
+
+    for I := 0 to Header.BlobCount - 1 do
+    begin
+      Matches := False;
+
+      if Entries[I].OwnerID = OwnerID then
+      begin
+        case BlobKind of
+          0:
+            Matches :=
+              IsKnowBlob(
+                Entries[I].BlobType
+              );
+
+          1:
+            Matches :=
+              IsCharBlob(
+                Entries[I].BlobType
+              );
+        end;
+      end;
+
+      if Matches then
+      begin
+        SetLength(
+          CompressedData,
+          Entries[I].CompressedSize
+        );
+
+        F.Position := DataOffset;
+
+        if Entries[I].CompressedSize > 0 then
+          F.ReadBuffer(
+            CompressedData[0],
+            Entries[I].CompressedSize
+          );
+
+        Result :=
+          DecompressZstd(
+            CompressedData
+          );
+
+        Exit;
+      end;
+
+      Inc(
+        DataOffset,
+        Entries[I].CompressedSize
+      );
+    end;
+
+    raise Exception.CreateFmt(
+      'Blob not found for OwnerID %s',
+      [IntToHex(OwnerID, 8)]
+    );
+
+  finally
+    F.Free;
+  end;
+end;
+
+function ExtractKnowledgeBlob(
+  const FileName: string;
+  OwnerID: Cardinal
+): TBytes;
+begin
+  Result :=
+    ExtractBlob(
+      FileName,
+      OwnerID,
+      0
+    );
+end;
+
+
+function ExtractCharacterBlob(
+  const FileName: string;
+  OwnerID: Cardinal
+): TBytes;
+begin
+  Result :=
+    ExtractBlob(
+      FileName,
+      OwnerID,
+      1
+    );
+end;
 
   function ListKnowledgeOwners(
     const FileName: string
@@ -130,32 +287,179 @@ end;
     end;
   end;
 
+  function BytesContainText(
+    const Data: TBytes;
+    const Text: string
+  ): Boolean;
+  var
+    I, J: Integer;
+  begin
+    Result := False;
 
-function ExtractKnowledgeBlob(
-  const FileName: string;
-  OwnerID: Cardinal
-): TBytes;
+    if (Text = '') or
+       (Length(Data) < Length(Text)) then
+      Exit;
+
+    for I := 0 to Length(Data) - Length(Text) do
+    begin
+      Result := True;
+
+      for J := 1 to Length(Text) do
+        if Data[I + J - 1] <> Ord(Text[J]) then
+        begin
+          Result := False;
+          Break;
+        end;
+
+      if Result then
+        Exit;
+    end;
+  end;
+
+  function FindTextOffset(
+    const Data: TBytes;
+    const Text: string
+  ): Integer;
+  var
+    I, J: Integer;
+    Match: Boolean;
+  begin
+    Result := -1;
+
+    if (Text = '') or
+       (Length(Data) < Length(Text)) then
+      Exit;
+
+    for I := 0 to Length(Data) - Length(Text) do
+    begin
+      Match := True;
+
+      for J := 1 to Length(Text) do
+        if Data[I + J - 1] <> Ord(Text[J]) then
+        begin
+          Match := False;
+          Break;
+        end;
+
+      if Match then
+        Exit(I);
+    end;
+  end;
+
+  procedure DumpBytesAround(
+    const Data: TBytes;
+    Offset: Integer;
+    BeforeCount: Integer;
+    AfterCount: Integer
+  );
+  var
+    I, FirstPos, LastPos: Integer;
+  begin
+    FirstPos := Offset - BeforeCount;
+
+    if FirstPos < 0 then
+      FirstPos := 0;
+
+    LastPos := Offset + AfterCount;
+
+    if LastPos > High(Data) then
+      LastPos := High(Data);
+
+    Write('Offset=$', IntToHex(Offset, 8), ' | ');
+
+    for I := FirstPos to LastPos do
+    begin
+      if I = Offset then
+        Write('[');
+
+      Write(
+        IntToHex(Data[I], 2),
+        ' '
+      );
+
+      if I = Offset - 1 then
+        Write('| ');
+
+      if I = Offset + 15 then
+        Write(']');
+    end;
+
+    WriteLn;
+  end;
+
+
+procedure DumpCharacterNames(
+  const FileName: string
+);
+const
+  Names: array[0..3] of string = (
+    'testperso',
+    'Virgin',
+    'Virgin2',
+    'Fabrice'
+  );
+var
+  Owners: TOwnerIDArray;
+  Blob: TBytes;
+  I, J: Integer;
+  Offset : Integer;
+begin
+  Owners :=
+    ListKnowledgeOwners(
+      FileName
+    );
+
+  for I := 0 to High(Owners) do
+  begin
+    Blob :=
+      ExtractCharacterBlob(
+        FileName,
+        Owners[I]
+      );
+
+    Write(
+      'Owner=$',
+      IntToHex(Owners[I], 8)
+    );
+
+    for J := Low(Names) to High(Names) do begin
+      if BytesContainText(
+           Blob,
+           Names[J]
+         )
+      then begin
+        WriteLn(
+          ' | ',
+          Names[J]
+        );
+        Offset := FindTextOffset(Blob,Names[J]);
+        WriteLn('offset: ', Offset);
+        DumpBytesAround(Blob, Offset, 16, 32);
+      end;
+    end;
+
+    WriteLn;
+    WriteLn('Nom extrait proprement : ', ExtractCharacterName(Blob));
+  end;
+end;
+
+
+procedure DumpBlobInventory(
+  const FileName: string
+);
 var
   F: TFileStream;
   Header: TKSCHeader;
-  Entries: TKSCBlobEntryArray;
+  Entry: TKSCBlobEntry;
   I: Integer;
-  DataOffset: Int64;
-  CompressedData: TBytes;
 begin
-  SetLength(Result, 0);
-
-  F := TFileStream.Create(
-    FileName,
-    fmOpenRead or fmShareDenyNone
-  );
+  F :=
+    TFileStream.Create(
+      FileName,
+      fmOpenRead or fmShareDenyNone
+    );
 
   try
-    if F.Size < SizeOf(TKSCHeader) then
-      raise Exception.Create(
-        'File too small'
-      );
-
     F.ReadBuffer(
       Header,
       SizeOf(Header)
@@ -166,67 +470,30 @@ begin
         'Not a KSC1 file'
       );
 
-    SetLength(
-      Entries,
+    WriteLn(
+      'Blob count: ',
       Header.BlobCount
     );
 
     for I := 0 to Header.BlobCount - 1 do
+    begin
       F.ReadBuffer(
-        Entries[I],
-        SizeOf(TKSCBlobEntry)
+        Entry,
+        SizeOf(Entry)
       );
 
-    DataOffset :=
-      SizeOf(TKSCHeader) +
-      Int64(Header.BlobCount) *
-      SizeOf(TKSCBlobEntry);
-
-    for I := 0 to Header.BlobCount - 1 do
-    begin
-      if
-        (Entries[I].OwnerID = OwnerID) and
-        IsKnowBlob(
-          Entries[I].BlobType
-        )
-      then
-      begin
-        SetLength(
-          CompressedData,
-          Entries[I].CompressedSize
-        );
-
-        F.Position := DataOffset;
-
-        if Entries[I].CompressedSize > 0 then
-          F.ReadBuffer(
-            CompressedData[0],
-            Entries[I].CompressedSize
-          );
-
-        Result :=
-          DecompressZstd(
-            CompressedData
-          );
-
-        Exit;
-      end;
-
-      Inc(
-        DataOffset,
-        Entries[I].CompressedSize
+      WriteLn(
+        'Owner=$',
+        IntToHex(Entry.OwnerID, 8),
+        ' Type=$',
+        IntToHex(Ord(Entry.BlobType[3]), 2),
+        IntToHex(Ord(Entry.BlobType[2]), 2),
+        IntToHex(Ord(Entry.BlobType[1]), 2),
+        IntToHex(Ord(Entry.BlobType[0]), 2),
+        ' Size=',
+        Entry.CompressedSize
       );
     end;
-
-    raise Exception.CreateFmt(
-      'KNOW blob not found for OwnerID %s',
-      [
-        IntToHex(
-          OwnerID,
-          8
-        )
-      ]
-    );
 
   finally
     F.Free;
