@@ -75,7 +75,8 @@ procedure TMainForm.LoadCharactersFile(
   const FileName: string
 );
 var
-  Blob: TBytes;
+  KnowBlob: TBytes;
+  CharBlob : TBytes;
   I: Integer;
   Knowledge: TKnowledgeItems;
   CharacterName: string;
@@ -101,11 +102,12 @@ begin
   BestIndex := -1;
 
   for I := 0 to High(FOwners) do begin
-      Blob := ExtractKnowledgeBlob(FSaveFileName, FOwners[I]);
+      KnowBlob := ExtractKnowledgeBlob(FSaveFileName, FOwners[I]);
+      CharBlob := ExtractCharacterBlob(FSaveFileName, FOwners[I]);
 
-      CharacterName := ExtractCharacterName(Blob);
+      CharacterName := ExtractCharacterName(CharBlob);
       lastPlayTime := 0;
-      ExtractBDBLastPlayTime(Blob, LastPlayTime);
+      ExtractBDBLastPlayTime(CharBlob, LastPlayTime);
       if (BestIndex = -1) or (LastPlayTime > BestLastPlayTime)
       then
           begin
@@ -114,7 +116,7 @@ begin
           end;
 
 
-      ParseKnowledgeBlob(Blob, Knowledge);
+      ParseKnowledgeBlob(KnowBlob, Knowledge);
 
     CharacterComboBox.Items.Add(
       Format(
