@@ -24,6 +24,13 @@ procedure DumpCharacterNames(const FileName: string);
 
 function GetBlobFromName(const FileName : string; Name : string) : TBytes;
 
+procedure DumpBytesAround(
+    const Data: TBytes;
+    Offset: Integer;
+    BeforeCount: Integer;
+    AfterCount: Integer
+  );
+
 
 
 implementation

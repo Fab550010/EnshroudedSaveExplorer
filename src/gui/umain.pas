@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
   Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator,
-  uLocalization, USaveIndex, uSteamDiscovery;
+  uLocalization, USaveIndex, uSteamDiscovery, ucharacterdata, uBDB;
 
 type
 
@@ -78,6 +78,10 @@ var
   Blob: TBytes;
   I: Integer;
   Knowledge: TKnowledgeItems;
+  CharacterName: string;
+  LastPlayTime: Cardinal;
+  BestLastPlayTime: Cardinal;
+  BestIndex: Integer;
 begin
   LoadTestJournal;
   LoadTestLocalization;
@@ -93,8 +97,22 @@ begin
 
   CharacterComboBox.Clear;
 
+  BestLastPlayTime := 0;
+  BestIndex := -1;
+
   for I := 0 to High(FOwners) do begin
       Blob := ExtractKnowledgeBlob(FSaveFileName, FOwners[I]);
+
+      CharacterName := ExtractCharacterName(Blob);
+      lastPlayTime := 0;
+      ExtractBDBLastPlayTime(Blob, LastPlayTime);
+      if (BestIndex = -1) or (LastPlayTime > BestLastPlayTime)
+      then
+          begin
+               BestLastPlayTime := LastPlayTime;
+               BestIndex := I;
+          end;
+
 
       ParseKnowledgeBlob(Blob, Knowledge);
 
@@ -102,7 +120,7 @@ begin
       Format(
         '%s (%d KNOW entries)',
         [
-          IntToHex(FOwners[I], 8),
+          CharacterName,
           Length(Knowledge)
         ]
       )
@@ -110,19 +128,10 @@ begin
 
   end;
 
-  if Length(FOwners) > 0 then
+  if BestIndex >= 0 then
   begin
-    CharacterComboBox.ItemIndex := 0;
-
-    CharacterComboBoxChange(
-      CharacterComboBox
-    );
-  end;
-
-  if CharacterComboBox.Items.Count > 0 then
-  begin
-    CharacterComboBox.ItemIndex := 0;
-    CharacterComboBoxChange(CharacterComboBox);
+       CharacterComboBox.ItemIndex := BestIndex;
+       CharacterComboBoxChange(CharacterComboBox);
   end
   else begin
     QuestGrid.RowCount := 1;
@@ -713,10 +722,6 @@ begin
 end;
 
 procedure TMainForm.OpenSaveButtonClick(Sender: TObject);
-var
-  Blob: TBytes;
-  Knowledge: TKnowledgeItems;
-  I: Integer;
 begin
   if not OpenSaveDialog.Execute then
     Exit;

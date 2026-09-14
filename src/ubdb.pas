@@ -112,6 +112,26 @@ function BDBDataAfterStringPoolOffset(
   const Header: TBDBHeader
 ): Cardinal;
 
+function ReadUInt32LE(
+  const Data: TBytes;
+  Offset: Integer
+): Cardinal;
+
+procedure FindPlausibleUnixTimestamps(
+  const Data: TBytes;
+  MinTimestamp: Cardinal;
+  MaxTimestamp: Cardinal
+);
+
+procedure FindRecentAlignedUnixTimestamps(
+  const Data: TBytes
+);
+
+function ExtractBDBLastPlayTime(
+  const Data: TBytes;
+  out Timestamp: Cardinal
+): Boolean;
+
 implementation
 
 function ReadUInt32LE(
@@ -127,6 +147,128 @@ begin
     Result,
     SizeOf(Result)
   );
+end;
+
+function ExtractBDBLastPlayTime(
+  const Data: TBytes;
+  out Timestamp: Cardinal
+): Boolean;
+var
+  Pos: Cardinal;
+begin
+  Result := False;
+  Timestamp := 0;
+
+  Pos := 0;
+
+  while Pos + 31 < Cardinal(Length(Data)) do
+  begin
+    if
+      (ReadUInt32LE(Data, Pos)      = 12) and
+      (ReadUInt32LE(Data, Pos + 4)  = 1) and
+      (ReadUInt32LE(Data, Pos + 8)  = 1) and
+      (ReadUInt32LE(Data, Pos + 12) = 13) and
+      (ReadUInt32LE(Data, Pos + 20) = 0) and
+      (ReadUInt32LE(Data, Pos + 24) = 1) and
+      (ReadUInt32LE(Data, Pos + 28) = 14)
+    then
+    begin
+      Timestamp :=
+        ReadUInt32LE(
+          Data,
+          Pos + 16
+        );
+
+      Result := True;
+      Exit;
+    end;
+
+    Inc(Pos, 4);
+  end;
+end;
+
+procedure FindRecentAlignedUnixTimestamps(
+  const Data: TBytes
+);
+const
+  { Environ août-octobre 2026 }
+  MinTimestamp: Cardinal = 1785500000;
+  MaxTimestamp: Cardinal = 1792000000;
+var
+  I: Cardinal;
+  V: Cardinal;
+  Count: Integer;
+begin
+  WriteLn('=== RECENT ALIGNED UNIX TIMESTAMPS ===');
+
+  Count := 0;
+  I := 0;
+
+  while I + 3 < Cardinal(Length(Data)) do
+  begin
+    V := ReadUInt32LE(Data, I);
+
+    if
+      (V >= MinTimestamp) and
+      (V <= MaxTimestamp)
+    then
+    begin
+      WriteLn(
+        '$',
+        IntToHex(I, 8),
+        '  $',
+        IntToHex(V, 8),
+        '  ',
+        V
+      );
+
+      Inc(Count);
+
+      if Count >= 100 then
+      begin
+        WriteLn('Stopped after 100 matches');
+        Exit;
+      end;
+    end;
+
+    Inc(I, 4);
+  end;
+
+  WriteLn('Matches: ', Count);
+end;
+
+procedure FindPlausibleUnixTimestamps(
+  const Data: TBytes;
+  MinTimestamp: Cardinal;
+  MaxTimestamp: Cardinal
+);
+var
+  I: Integer;
+  V: Cardinal;
+begin
+  WriteLn('=== PLAUSIBLE UNIX TIMESTAMPS ===');
+
+  for I := 0 to Length(Data) - 4 do
+  begin
+    Move(
+      Data[I],
+      V,
+      SizeOf(V)
+    );
+
+    if
+      (V >= MinTimestamp) and
+      (V <= MaxTimestamp)
+    then
+      WriteLn(
+        '$',
+        IntToHex(I, 8),
+        '  $',
+        IntToHex(V, 8),
+        '  ',
+        V
+      );
+  end;
 end;
 
 procedure DumpUInt32Pairs(
