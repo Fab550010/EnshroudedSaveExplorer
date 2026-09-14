@@ -29,6 +29,7 @@ type
     QuestTabSheet: TTabSheet;
     LoreTabSheet: TTabSheet;
     LoreGrid: TStringGrid;
+    SaveRefreshTimer: TTimer;
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -37,6 +38,7 @@ type
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure LoreGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure QuestsFilterChange(Sender: TObject);
+    procedure SaveRefreshTimerTimer(Sender: TObject);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -47,11 +49,17 @@ type
     FSortAscending: Boolean;
     FLoreSortColumn: Integer;
     FLoreSortAscending: Boolean;
+    FIndexFileName: string;
+    FSaveFileStamp: LongInt;
+    FSaveFileSize: Int64;
+    FRefreshingSave: Boolean;
     procedure LoadTestJournal;
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid;
     procedure PopulateLoreGrid;
     procedure LoadCharactersFile(const Filename : string);
+    procedure RefreshSaveIfNeeded;
+    function GetSaveFileSize(const FileName: string): Int64;
   public
     destructor Destroy; override;
   end;
@@ -71,6 +79,29 @@ implementation
 
 { TMainForm }
 
+function TMainForm.GetSaveFileSize(
+  const FileName: string
+): Int64;
+var
+  SR: TSearchRec;
+begin
+  Result := -1;
+
+  if FindFirst(
+       FileName,
+       faAnyFile,
+       SR
+     ) = 0
+  then
+  begin
+    try
+      Result := SR.Size;
+    finally
+      FindClose(SR);
+    end;
+  end;
+end;
+
 procedure TMainForm.LoadCharactersFile(
   const FileName: string
 );
@@ -84,9 +115,6 @@ var
   BestLastPlayTime: Cardinal;
   BestIndex: Integer;
 begin
-  LoadTestJournal;
-  LoadTestLocalization;
-
   FSaveFileName := FileName;
 
   Caption := FSaveFileName;
@@ -140,6 +168,7 @@ begin
     LoreGrid.RowCount := 1;
   end;
 end;
+
 
 function LoreStatusSortRank(
   Status: TLoreStatus
@@ -525,6 +554,68 @@ begin
      PopulateQuestGrid;
 end;
 
+procedure TMainForm.SaveRefreshTimerTimer(Sender: TObject);
+begin
+     RefreshSaveIfNeeded;
+end;
+
+procedure TMainForm.RefreshSaveIfNeeded;
+var
+  CharactersFileName: string;
+  NewStamp: LongInt;
+  NewSize: Int64;
+begin
+  if FRefreshingSave then
+    Exit;
+
+  if FIndexFileName = '' then
+    Exit;
+
+  FRefreshingSave := True;
+
+  try
+    try
+      CharactersFileName :=
+        ResolveCharactersSave(
+          FIndexFileName
+        );
+
+      NewStamp :=
+        FileAge(
+          CharactersFileName
+        );
+
+      NewSize :=
+        GetSaveFileSize(
+          CharactersFileName
+        );
+
+      if
+        (CharactersFileName <> FSaveFileName) or
+        (NewStamp <> FSaveFileStamp) or
+        (NewSize <> FSaveFileSize)
+      then
+      begin
+        LoadCharactersFile(
+          CharactersFileName
+        );
+
+        FSaveFileStamp := NewStamp;
+        FSaveFileSize := NewSize;
+      end;
+
+    except
+      {
+        Enshrouded peut être précisément en train de remplacer
+        characters-N ou characters-index.
+        On ne fait rien : le prochain tick réessaiera.
+      }
+    end;
+
+  finally
+    FRefreshingSave := False;
+  end;
+end;
 
 procedure TMainForm.LoadTestJournal;
 var
@@ -768,24 +859,26 @@ procedure TMainForm.FormCreate(
   Sender: TObject
 );
 var
-  IndexFileName: string;
   CharactersFileName: string;
 begin
-  if not FindEnshroudedCharactersIndex(
-           IndexFileName
-         )
+  LoadTestJournal;
+  LoadTestLocalization;
+  FRefreshingSave := False;
+
+  if not FindEnshroudedCharactersIndex(FIndexFileName)
   then
     Exit;
 
   try
-    CharactersFileName :=
-      ResolveCharactersSave(
-        IndexFileName
-      );
+    CharactersFileName := ResolveCharactersSave(FIndexFileName);
 
-    LoadCharactersFile(
-      CharactersFileName
-    );
+    LoadCharactersFile(CharactersFileName);
+
+    FSaveFileStamp := FileAge(CharactersFileName);
+
+    FSaveFileSize := GetSaveFileSize(CharactersFileName);
+
+    SaveRefreshTimer.Enabled := True;
 
   except
     on E: Exception do

@@ -214,4 +214,9 @@ object MainForm: TMainForm
     Left = 16
     Top = 16
   end
+  object SaveRefreshTimer: TTimer
+    OnTimer = SaveRefreshTimerTimer
+    Left = 8
+    Top = 8
+  end
 end
