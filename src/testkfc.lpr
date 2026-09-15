@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}
   Classes
-  { you can add units after this }, SysUtils, uKFC;
+  { you can add units after this }, SysUtils, uKFC, uReflection;
 
 var
   Data: TBytes;
