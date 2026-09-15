@@ -7,13 +7,16 @@ uses
   cthreads,
   {$ENDIF}
   Classes
-  { you can add units after this }, SysUtils, uKFC, uReflection, uJournalResource;
+  { you can add units after this }, SysUtils, uKFC, uReflection,
+  uJournalResource, uJournalJSON, fpjson, uJournalEvaluator;
 
 var
   Data: TBytes;
   F: TFileStream;
   Collections: TJournalCollectionArray;
   Quests: TJournalQuestArray;
+  JournalRoot: TJSONObject;
+  Objects: TQuestObjectArray;
 
   function ReadU32(
     const Data: TBytes;
@@ -497,6 +500,33 @@ WriteLn(
       Quests[0].UnlockForAllPlayers
     )
   );
+end;
+
+    JournalRoot :=
+  BuildJournalJSON(
+    Quests,
+    Collections
+  );
+
+try
+  SetLength(
+    Objects,
+    0
+  );
+
+  CollectQuestObjects(
+    JournalRoot,
+    Objects
+  );
+
+  WriteLn;
+  WriteLn(
+    'Journal JSON objects: ',
+    Length(Objects)
+  );
+
+finally
+  JournalRoot.Free;
 end;
 
     if Length(Data) > 0 then
