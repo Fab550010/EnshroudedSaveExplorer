@@ -17,6 +17,12 @@ var
   Quests: TJournalQuestArray;
   JournalRoot: TJSONObject;
   Objects: TQuestObjectArray;
+  AutoCount: Integer;
+  WorldQuestCount: Integer;
+  PlayerQuestCount: Integer;
+  LoreCount: Integer;
+  TutorialCount: Integer;
+  I: Integer;
 
   function ReadU32(
     const Data: TBytes;
@@ -528,6 +534,44 @@ try
 finally
   JournalRoot.Free;
 end;
+
+    AutoCount := 0;
+WorldQuestCount := 0;
+PlayerQuestCount := 0;
+
+for I := 0 to High(Quests) do
+begin
+  case Quests[I].QuestType of
+    jqtAuto:
+      Inc(AutoCount);
+
+    jqtWorldQuest:
+      Inc(WorldQuestCount);
+
+    jqtPlayerQuest:
+      Inc(PlayerQuestCount);
+  end;
+end;
+
+LoreCount := 0;
+TutorialCount := 0;
+
+for I := 0 to High(Collections) do
+begin
+  if Collections[I].Base.IsTutorial then
+    Inc(TutorialCount)
+  else
+    Inc(LoreCount);
+end;
+
+WriteLn;
+WriteLn('=== JOURNAL CLASSIFICATION ===');
+WriteLn('Auto quests        : ', AutoCount);
+WriteLn('World quests       : ', WorldQuestCount);
+WriteLn('Player quests      : ', PlayerQuestCount);
+WriteLn('Lore collections   : ', LoreCount);
+WriteLn('Tutorials          : ', TutorialCount);
+
 
     if Length(Data) > 0 then
 begin
