@@ -413,7 +413,7 @@ begin
   WriteLn(
     'First collection ID=$',
     IntToHex(
-      Collections[0].EntryID,
+      Collections[0].Base.EntryID,
       8
     )
   );
@@ -421,16 +421,16 @@ begin
   WriteLn(
     'First collection entries=',
     Length(
-      Collections[0].Entries
+      Collections[0].Base.Entries
     )
   );
 
-  if Length(Collections[0].Entries) > 0 then
+  if Length(Collections[0].Base.Entries) > 0 then
   begin
     WriteLn(
       'First entry ID=$',
       IntToHex(
-        Collections[0].Entries[0].EntryID,
+        Collections[0].Base.Entries[0].EntryID,
         8
       )
     );
@@ -439,7 +439,7 @@ begin
       'First entry KNOW requirement=$',
       IntToHex(
         Collections[0].
-          Entries[0].
+          Base.Entries[0].
           KnowledgeRequirement.
           KnowledgeOrQueryID,
         8
@@ -465,7 +465,7 @@ begin
   WriteLn(
     'First quest ID=$',
     IntToHex(
-      Quests[0].EntryID,
+      Quests[0].Base.EntryID,
       8
     )
   );
@@ -473,7 +473,7 @@ begin
   WriteLn(
     'First quest entries=',
     Length(
-      Quests[0].Entries
+      Quests[0].Base.Entries
     )
   );
 
