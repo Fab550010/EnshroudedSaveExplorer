@@ -1355,6 +1355,34 @@ then
 
                   DumpStructFields(PE, FieldTypeOffset, '  ');
              end;
+           writeln('quests hash');
+           if FindTypeOffsetByHash(
+     PE,
+     TableOffset,
+     TableCount,
+     $9FAAF2FD,
+     EnumTypeOffset
+   )
+then
+  DumpEnumFields(
+    PE,
+    EnumTypeOffset,
+    'quest source enum'
+  );
+
+if FindTypeOffsetByHash(
+     PE,
+     TableOffset,
+     TableCount,
+     $58A30658,
+     EnumTypeOffset
+   )
+then
+  DumpEnumFields(
+    PE,
+    EnumTypeOffset,
+    'quest type enum'
+  );
 
       end;
       if FieldName = 'collections' then
