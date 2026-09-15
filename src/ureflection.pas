@@ -853,6 +853,104 @@ begin
 end;
 
 
+procedure DumpEnumFields(
+  const PE: TPEFile;
+  TypeOffset: QWord;
+  const Title: string
+);
+var
+  FieldCount: Cardinal;
+  EnumFieldsVA: QWord;
+  EnumFieldsOffset: QWord;
+
+  I: Cardinal;
+  EntryOffset: QWord;
+
+  NameVA: QWord;
+  NameLen: QWord;
+  Name: string;
+  Value: QWord;
+begin
+  FieldCount :=
+    ReadUInt32LE(
+      PE.Data,
+      TypeOffset + $48
+    );
+
+  EnumFieldsVA :=
+    ReadUInt64LE(
+      PE.Data,
+      TypeOffset + $60
+    );
+
+  WriteLn;
+  WriteLn('--- ', Title, ' ---');
+
+  if EnumFieldsVA = 0 then
+  begin
+    WriteLn('No enum fields');
+    Exit;
+  end;
+
+  if not VAToFileOffset(
+           PE,
+           EnumFieldsVA,
+           EnumFieldsOffset
+         )
+  then
+    raise Exception.Create(
+      'Unable to resolve enum fields'
+    );
+
+  for I := 0 to FieldCount - 1 do
+  begin
+    {
+      EnumFieldMetadata:
+        +00 char* name
+        +08 uint64 name_len
+        +10 uint64 value
+        +18 padding[16]
+
+      Total = 40 bytes
+    }
+
+    EntryOffset :=
+      EnumFieldsOffset +
+      QWord(I) * 40;
+
+    NameVA :=
+      ReadUInt64LE(
+        PE.Data,
+        EntryOffset
+      );
+
+    NameLen :=
+      ReadUInt64LE(
+        PE.Data,
+        EntryOffset + 8
+      );
+
+    Name :=
+      ReadStringAtVA(
+        PE,
+        NameVA,
+        NameLen
+      );
+
+    Value :=
+      ReadUInt64LE(
+        PE.Data,
+        EntryOffset + 16
+      );
+
+    WriteLn(
+      Value,
+      ' = ',
+      Name
+    );
+  end;
+end;
+
 procedure DumpReflectionType(
   const ExeFileName: string;
   QualifiedHash: Cardinal
@@ -897,7 +995,7 @@ var
   J : integer;
 
   RequirementTypeOffset: QWord;
-
+  EnumTypeOffset: QWord;
 begin
   PE := LoadPEFile(ExeFileName);
 
@@ -1058,6 +1156,34 @@ end
 else
   WriteLn(
     'Requirement type $C542456E not found'
+  );
+
+  if FindTypeOffsetByHash(
+     PE,
+     TableOffset,
+     TableCount,
+     $EF782BD5,
+     EnumTypeOffset
+   )
+then
+  DumpEnumFields(
+    PE,
+    EnumTypeOffset,
+    'compareOperator enum'
+  );
+
+if FindTypeOffsetByHash(
+     PE,
+     TableOffset,
+     TableCount,
+     $437364EE,
+     EnumTypeOffset
+   )
+then
+  DumpEnumFields(
+    PE,
+    EnumTypeOffset,
+    'requirement type enum'
   );
 
     for j := 0 to FieldCount - 1 do
