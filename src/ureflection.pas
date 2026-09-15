@@ -798,6 +798,8 @@ begin
   end;
 end;
 
+
+
 procedure DumpReflectionType(
   const ExeFileName: string;
   QualifiedHash: Cardinal
@@ -842,16 +844,9 @@ var
   J : integer;
 
 begin
-  PE :=
-    LoadPEFile(
-      ExeFileName
-    );
+  PE := LoadPEFile(ExeFileName);
 
-  if not LocateReflectionTable(
-           PE,
-           TableOffset,
-           TableCount
-         )
+  if not LocateReflectionTable(PE, TableOffset, TableCount)
   then
     raise Exception.Create(
       'Unable to locate reflection table'
@@ -968,7 +963,7 @@ begin
         'Unable to resolve struct field table'
       );
 
-        for j := 0 to FieldCount - 1 do
+    for j := 0 to FieldCount - 1 do
     begin
       FieldOffset :=
         StructFieldsOffset +
@@ -1108,20 +1103,43 @@ begin
           IntToHex(InnerPrimitiveType, 2)
         );
       end;
-      if
-  (FieldName = 'quests') or
-  (FieldName = 'collections')
-then
-begin
-  WriteLn;
-  WriteLn('--- ', FieldName, ' element fields ---');
 
-  DumpStructFields(
-    PE,
-    InnerTypeOffset,
-    '  '
-  );
-end;
+      if (FieldName = 'quests') or (FieldName = 'collections')
+      then begin
+           WriteLn;
+           WriteLn('--- ', FieldName, ' element fields ---');
+           DumpStructFields(PE, InnerTypeOffset, '  ');
+      end;
+
+      if (FieldName = 'quests' )
+      then begin
+           InnerTypeVA :=
+           ReadUInt64LE(
+                        PE.Data,
+                        InnerTypeOffset + $38
+                        );
+
+           if (InnerTypeVA <> 0) and VAToFileOffset(PE, InnerTypeVA, FieldTypeOffset)
+             then begin
+                  WriteLn;
+                  WriteLn('--- quests base type fields ---');
+
+                  WriteLn('base hash=$', IntToHex(ReadUInt32LE(PE.Data, FieldTypeOffset + $50), 8));
+
+                  WriteLn('base size=', ReadUInt32LE(PE.Data, FieldTypeOffset + $40));
+
+                  DumpStructFields(PE, FieldTypeOffset, '  ');
+             end;
+
+      end;
+      if FieldName = 'collections'
+        then begin
+             { InnerTypeOffset = type $FBEEACF5, Collection }
+             writeln('bouh');
+             {
+              Retrouver le champ "entries" et son inner type, puis dumper le type $39004D5B.
+              }
+        end;
     end;
 
 
