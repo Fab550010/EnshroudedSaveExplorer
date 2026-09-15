@@ -78,13 +78,42 @@ type
 
     Entries: TJournalEntryArray;
 
-    Source: Byte;
-    QuestType: Byte;
+    Source: TJournalQuestSource;
+    QuestType: TJournalQuestType;
     UnlockForAllPlayers: Boolean;
   end;
 
   TJournalQuestArray =
     array of TJournalQuest;
+
+  type
+  TJournalQuestSource = (
+    jqsNone,
+    jqsFlame,
+    jqsBlacksmith,
+    jqsAlchemist,
+    jqsHuntress,
+    jqsFarmer,
+    jqsCarpenter,
+    jqsCryptKeeper,
+    jqsBard,
+    jqsChineseNewYearTrader,
+    jqsBarber,
+    jqsFisher,
+    jqsAncientResearcher,
+    jqsGrassland,
+    jqsDeepforest,
+    jqsSteppes,
+    jqsDesert,
+    jqsColdHeights,
+    jqsWetlands
+  );
+
+  TJournalQuestType = (
+    jqtAuto,
+    jqtWorldQuest,
+    jqtPlayerQuest
+  );
 
 procedure ParseJournalCollections(
   const Data: TBytes;
@@ -96,6 +125,34 @@ procedure ParseJournalQuests(
 );
 
 implementation
+
+function DecodeQuestSource(
+  Value: Byte
+): TJournalQuestSource;
+begin
+  if Value > Ord(High(TJournalQuestSource)) then
+    raise Exception.CreateFmt(
+      'Unknown quest source: %d',
+      [Value]
+    );
+
+  Result :=
+    TJournalQuestSource(Value);
+end;
+
+function DecodeQuestType(
+  Value: Byte
+): TJournalQuestType;
+begin
+  if Value > Ord(High(TJournalQuestType)) then
+    raise Exception.CreateFmt(
+      'Unknown quest type: %d',
+      [Value]
+    );
+
+  Result :=
+    TJournalQuestType(Value);
+end;
 
 function ReadU32(
   const Data: TBytes;
@@ -523,16 +580,20 @@ begin
   end;
 
   Result.Source :=
+  DecodeQuestSource(
     ReadU8(
       Data,
       QuestOffset + 32
-    );
+    )
+  );
 
-  Result.QuestType :=
+Result.QuestType :=
+  DecodeQuestType(
     ReadU8(
       Data,
       QuestOffset + 33
-    );
+    )
+  );
 
   Result.UnlockForAllPlayers :=
     ReadU8(
