@@ -1158,6 +1158,8 @@ else
     'Requirement type $C542456E not found'
   );
 
+writeln('------findtype------');
+
   if FindTypeOffsetByHash(
      PE,
      TableOffset,

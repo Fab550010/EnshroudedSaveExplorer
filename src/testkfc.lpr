@@ -7,11 +7,12 @@ uses
   cthreads,
   {$ENDIF}
   Classes
-  { you can add units after this }, SysUtils, uKFC, uReflection;
+  { you can add units after this }, SysUtils, uKFC, uReflection, uJournalResource;
 
 var
   Data: TBytes;
   F: TFileStream;
+  Collections: TJournalCollectionArray;
 
   function ReadU32(
     const Data: TBytes;
@@ -394,6 +395,57 @@ begin
       );
 
     DumpFirstCollection(Data);
+
+    ParseJournalCollections(
+  Data,
+  Collections
+);
+
+WriteLn;
+WriteLn(
+  'Parsed collections: ',
+  Length(Collections)
+);
+
+if Length(Collections) > 0 then
+begin
+  WriteLn(
+    'First collection ID=$',
+    IntToHex(
+      Collections[0].EntryID,
+      8
+    )
+  );
+
+  WriteLn(
+    'First collection entries=',
+    Length(
+      Collections[0].Entries
+    )
+  );
+
+  if Length(Collections[0].Entries) > 0 then
+  begin
+    WriteLn(
+      'First entry ID=$',
+      IntToHex(
+        Collections[0].Entries[0].EntryID,
+        8
+      )
+    );
+
+    WriteLn(
+      'First entry KNOW requirement=$',
+      IntToHex(
+        Collections[0].
+          Entries[0].
+          KnowledgeRequirement.
+          KnowledgeOrQueryID,
+        8
+      )
+    );
+  end;
+end;
 
     if Length(Data) > 0 then
 begin
