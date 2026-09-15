@@ -17,6 +17,8 @@ function ExtractKFCResource(
 
 implementation
 
+uses uZstd;
+
 type
   TKFCLocation = record
     Offset: QWord;
@@ -41,6 +43,9 @@ type
     ResourceValues: TKFCLocation;
     ResourceChunks: TKFCLocation;
   end;
+
+  TKFCResourceChunkArray =
+    array of TKFCResourceChunk;
 
 const
   JOURNAL_GUID: array[0..15] of Byte = (
@@ -174,6 +179,75 @@ begin
   end;
 end;
 
+function ReadResourceChunks(
+  Stream: TStream;
+  const Header: TKFCHeader
+): TKFCResourceChunkArray;
+var
+  I: Integer;
+begin
+  SetLength(
+    Result,
+    Header.ResourceChunks.Count
+  );
+
+  Stream.Position :=
+    Header.ResourceChunks.Offset;
+
+  for I := 0 to High(Result) do
+  begin
+    Result[I].Offset :=
+      ReadUInt32LE(Stream);
+
+    Result[I].Size :=
+      ReadUInt32LE(Stream);
+
+    Result[I].CompressedSize :=
+      ReadUInt32LE(Stream);
+
+    Result[I].UncompressedOffset :=
+      ReadUInt32LE(Stream);
+
+    Result[I].UncompressedSize :=
+      ReadUInt32LE(Stream);
+  end;
+end;
+
+function ReadAndDecompressChunk(
+  ResourcesStream: TStream;
+  const Chunk: TKFCResourceChunk
+): TBytes;
+var
+  CompressedData: TBytes;
+begin
+  SetLength(
+    CompressedData,
+    Chunk.CompressedSize
+  );
+
+  ResourcesStream.Position :=
+    Chunk.Offset;
+
+  ResourcesStream.ReadBuffer(
+    CompressedData[0],
+    Length(CompressedData)
+  );
+
+  Result :=
+    DecompressZstd(
+      CompressedData
+    );
+
+  if Length(Result) <> Chunk.UncompressedSize then
+    raise Exception.CreateFmt(
+      'Unexpected decompressed chunk size: got %d, expected %d',
+      [
+        Length(Result),
+        Chunk.UncompressedSize
+      ]
+    );
+end;
+
 function ExtractKFCResource(
   const KFCFileName: string;
   const ResourcesFileName: string;
@@ -187,9 +261,16 @@ var
   Guid: array[0..15] of Byte;
   EntryTypeHash: Cardinal;
   EntryPartIndex: Cardinal;
-  I: Cardinal;
+  I: Integer;
   ResourceIndex: Integer;
   Resource: TKFCResourceEntry;
+  Chunks: TKFCResourceChunkArray;
+  ResourceEnd: QWord;
+  ChunkStart: QWord;
+  ChunkEnd: QWord;
+  ResourcesStream: TFileStream;
+  ChunkData: TBytes;
+  OffsetInChunk: QWord;
 begin
   SetLength(Result, 0);
 
@@ -288,6 +369,86 @@ begin
       IntToHex(Resource.Size, 8),
       ')'
     );
+
+    Chunks :=
+  ReadResourceChunks(
+    Stream,
+    Header
+  );
+
+ResourceEnd :=
+  QWord(Resource.Offset) +
+  Resource.Size;
+
+WriteLn(
+  'Resource range=$',
+  IntToHex(Resource.Offset, 8),
+  '..$',
+  IntToHex(ResourceEnd, 8)
+);
+
+for I := 0 to High(Chunks) do
+begin
+  ChunkStart :=
+    Chunks[I].UncompressedOffset;
+
+  ChunkEnd :=
+    ChunkStart +
+    Chunks[I].UncompressedSize;
+
+  if
+  (Resource.Offset >= ChunkStart) and
+  (ResourceEnd <= ChunkEnd)
+then
+begin
+  ResourcesStream :=
+    TFileStream.Create(
+      ResourcesFileName,
+      fmOpenRead or fmShareDenyNone
+    );
+
+  try
+    ChunkData :=
+      ReadAndDecompressChunk(
+        ResourcesStream,
+        Chunks[I]
+      );
+
+    OffsetInChunk :=
+      QWord(Resource.Offset) -
+      Chunks[I].UncompressedOffset;
+
+    if
+      OffsetInChunk +
+      Resource.Size >
+      QWord(Length(ChunkData))
+    then
+      raise Exception.Create(
+        'Resource exceeds decompressed chunk'
+      );
+
+    SetLength(
+      Result,
+      Resource.Size
+    );
+
+    Move(
+      ChunkData[OffsetInChunk],
+      Result[0],
+      Resource.Size
+    );
+
+    WriteLn(
+      'Extracted resource bytes: ',
+      Length(Result)
+    );
+
+    Exit;
+  finally
+    ResourcesStream.Free;
+  end;
+end;
+end;
 
   finally
     Stream.Free;

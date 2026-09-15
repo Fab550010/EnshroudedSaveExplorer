@@ -11,6 +11,7 @@ uses
 
 var
   Data: TBytes;
+  F: TFileStream;
 
 begin
   try
@@ -22,6 +23,23 @@ begin
         $60B5ED8A,
         0
       );
+    if Length(Data) > 0 then
+begin
+  F :=
+    TFileStream.Create(
+      'journal_resource.bin',
+      fmCreate
+    );
+
+  try
+    F.WriteBuffer(
+      Data[0],
+      Length(Data)
+    );
+  finally
+    F.Free;
+  end;
+end;
 
   except
     on E: Exception do
