@@ -13,6 +13,7 @@ var
   Data: TBytes;
   F: TFileStream;
   Collections: TJournalCollectionArray;
+  Quests: TJournalQuestArray;
 
   function ReadU32(
     const Data: TBytes;
@@ -445,6 +446,53 @@ begin
       )
     );
   end;
+end;
+
+
+ParseJournalQuests(
+  Data,
+  Quests
+);
+
+WriteLn;
+WriteLn(
+  'Parsed quests: ',
+  Length(Quests)
+);
+
+if Length(Quests) > 0 then
+begin
+  WriteLn(
+    'First quest ID=$',
+    IntToHex(
+      Quests[0].EntryID,
+      8
+    )
+  );
+
+  WriteLn(
+    'First quest entries=',
+    Length(
+      Quests[0].Entries
+    )
+  );
+
+  WriteLn(
+    'First quest source=',
+    Quests[0].Source
+  );
+
+  WriteLn(
+    'First quest type=',
+    Quests[0].QuestType
+  );
+
+  WriteLn(
+    'First quest unlockForAllPlayers=',
+    Ord(
+      Quests[0].UnlockForAllPlayers
+    )
+  );
 end;
 
     if Length(Data) > 0 then

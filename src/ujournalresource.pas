@@ -66,9 +66,33 @@ type
   TJournalCollectionArray =
     array of TJournalCollection;
 
+  type
+  TJournalQuest = record
+    EntryID: Cardinal;
+    LoreCategoryID: Cardinal;
+    NameID: Cardinal;
+    ReferencedDocumentNameID: Cardinal;
+
+    Priority: Cardinal;
+    IsTutorial: Boolean;
+
+    Entries: TJournalEntryArray;
+
+    Source: Byte;
+    QuestType: Byte;
+    UnlockForAllPlayers: Boolean;
+  end;
+
+  TJournalQuestArray =
+    array of TJournalQuest;
+
 procedure ParseJournalCollections(
   const Data: TBytes;
   out Collections: TJournalCollectionArray
+);
+procedure ParseJournalQuests(
+  const Data: TBytes;
+  out Quests: TJournalQuestArray
 );
 
 implementation
@@ -416,7 +440,153 @@ begin
       );
 end;
 
+function ParseJournalQuest(
+  const Data: TBytes;
+  QuestOffset: QWord
+): TJournalQuest;
+var
+  EntriesFieldOffset: QWord;
+  EntriesRelativeOffset: Cardinal;
+  EntriesCount: Cardinal;
+  EntriesOffset: QWord;
+  I: Cardinal;
+begin
+  Result.EntryID :=
+    ReadU32(
+      Data,
+      QuestOffset
+    );
+
+  Result.LoreCategoryID :=
+    ReadU32(
+      Data,
+      QuestOffset + 4
+    );
+
+  Result.NameID :=
+    ReadU32(
+      Data,
+      QuestOffset + 8
+    );
+
+  Result.ReferencedDocumentNameID :=
+    ReadU32(
+      Data,
+      QuestOffset + 12
+    );
+
+  Result.Priority :=
+    ReadU32(
+      Data,
+      QuestOffset + 16
+    );
+
+  Result.IsTutorial :=
+    ReadU8(
+      Data,
+      QuestOffset + 20
+    ) <> 0;
+
+  EntriesFieldOffset :=
+    QuestOffset + 24;
+
+  EntriesRelativeOffset :=
+    ReadU32(
+      Data,
+      EntriesFieldOffset
+    );
+
+  EntriesCount :=
+    ReadU32(
+      Data,
+      EntriesFieldOffset + 4
+    );
+
+  SetLength(
+    Result.Entries,
+    EntriesCount
+  );
+
+  if EntriesCount > 0 then
+  begin
+    EntriesOffset :=
+      EntriesFieldOffset +
+      EntriesRelativeOffset;
+
+    for I := 0 to EntriesCount - 1 do
+      Result.Entries[I] :=
+        ParseJournalEntry(
+          Data,
+          EntriesOffset +
+          QWord(I) * 72
+        );
+  end;
+
+  Result.Source :=
+    ReadU8(
+      Data,
+      QuestOffset + 32
+    );
+
+  Result.QuestType :=
+    ReadU8(
+      Data,
+      QuestOffset + 33
+    );
+
+  Result.UnlockForAllPlayers :=
+    ReadU8(
+      Data,
+      QuestOffset + 34
+    ) <> 0;
+end;
 
 
+procedure ParseJournalQuests(
+  const Data: TBytes;
+  out Quests: TJournalQuestArray
+);
+var
+  QuestsFieldOffset: QWord;
+  QuestsRelativeOffset: Cardinal;
+  QuestsCount: Cardinal;
+  QuestsOffset: QWord;
+  I: Cardinal;
+begin
+  {
+    JournalRegistryResource.quests @0
+  }
+
+  QuestsFieldOffset := 0;
+
+  QuestsRelativeOffset :=
+    ReadU32(
+      Data,
+      QuestsFieldOffset
+    );
+
+  QuestsCount :=
+    ReadU32(
+      Data,
+      QuestsFieldOffset + 4
+    );
+
+  SetLength(
+    Quests,
+    QuestsCount
+  );
+
+  QuestsOffset :=
+    QuestsFieldOffset +
+    QuestsRelativeOffset;
+
+  for I := 0 to QuestsCount - 1 do
+    Quests[I] :=
+      ParseJournalQuest(
+        Data,
+        QuestsOffset +
+        QWord(I) * 44
+      );
+end;
 
 end.
