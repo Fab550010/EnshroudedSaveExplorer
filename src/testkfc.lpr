@@ -13,6 +13,375 @@ var
   Data: TBytes;
   F: TFileStream;
 
+  function ReadU32(
+    const Data: TBytes;
+    Offset: QWord
+  ): Cardinal;
+  begin
+    if Offset + 4 > QWord(Length(Data)) then
+      raise Exception.Create('ReadU32 out of bounds');
+
+    Move(
+      Data[Offset],
+      Result,
+      4
+    );
+  end;
+
+  function ReadU8(
+    const Data: TBytes;
+    Offset: QWord
+  ): Byte;
+  begin
+    if Offset >= QWord(Length(Data)) then
+      raise Exception.Create('ReadU8 out of bounds');
+
+    Result := Data[Offset];
+  end;
+
+
+procedure DumpRequirement(
+  const Data: TBytes;
+  Offset: QWord;
+  const Name: string
+);
+begin
+  WriteLn(Name, ':');
+
+  WriteLn(
+    '  knowledgeOrQueryId=$',
+    IntToHex(
+      ReadU32(Data, Offset),
+      8
+    )
+  );
+
+  WriteLn(
+    '  compareValue=',
+    ReadU32(
+      Data,
+      Offset + 4
+    )
+  );
+
+  WriteLn(
+    '  compareOperator=',
+    ReadU8(
+      Data,
+      Offset + 8
+    )
+  );
+
+  WriteLn(
+    '  type=',
+    ReadU8(
+      Data,
+      Offset + 9
+    )
+  );
+
+  WriteLn(
+    '  explicit=',
+    ReadU8(
+      Data,
+      Offset + 10
+    )
+  );
+end;
+
+procedure DumpFirstCollection(
+  const Data: TBytes
+);
+var
+  CollectionsField: QWord;
+  CollectionsRelativeOffset: Cardinal;
+  CollectionsCount: Cardinal;
+
+  CollectionOffset: QWord;
+
+  EntriesField: QWord;
+  EntriesRelativeOffset: Cardinal;
+  EntriesCount: Cardinal;
+
+  EntryOffset: QWord;
+
+  ProgressField: QWord;
+  ProgressRelativeOffset: Cardinal;
+  ProgressCount: Cardinal;
+begin
+  {
+    JournalRegistryResource:
+      collections field @8
+  }
+
+  CollectionsField := 8;
+
+  CollectionsRelativeOffset :=
+    ReadU32(
+      Data,
+      CollectionsField
+    );
+
+  CollectionsCount :=
+    ReadU32(
+      Data,
+      CollectionsField + 4
+    );
+
+  CollectionOffset :=
+    CollectionsField +
+    CollectionsRelativeOffset;
+
+  WriteLn;
+  WriteLn('=== FIRST COLLECTION ===');
+
+  WriteLn(
+    'collections count=',
+    CollectionsCount
+  );
+
+  WriteLn(
+    'collection offset=$',
+    IntToHex(
+      CollectionOffset,
+      8
+    )
+  );
+
+  {
+    Collection struct, size 32
+  }
+
+  WriteLn(
+    'entryId=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        CollectionOffset
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'loreCategory=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        CollectionOffset + 4
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'name=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        CollectionOffset + 8
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'referencedDocumentName=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        CollectionOffset + 12
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'priority=',
+    ReadU32(
+      Data,
+      CollectionOffset + 16
+    )
+  );
+
+  WriteLn(
+    'isTutorial=',
+    ReadU8(
+      Data,
+      CollectionOffset + 20
+    )
+  );
+
+  {
+    entries BlobArray @24
+  }
+
+  EntriesField :=
+    CollectionOffset + 24;
+
+  EntriesRelativeOffset :=
+    ReadU32(
+      Data,
+      EntriesField
+    );
+
+  EntriesCount :=
+    ReadU32(
+      Data,
+      EntriesField + 4
+    );
+
+  EntriesField :=
+    EntriesField +
+    EntriesRelativeOffset;
+
+  WriteLn(
+    'entries count=',
+    EntriesCount
+  );
+
+  WriteLn(
+    'entries offset=$',
+    IntToHex(
+      EntriesField,
+      8
+    )
+  );
+
+  if EntriesCount = 0 then
+    Exit;
+
+  {
+    First journal entry, size 72
+  }
+
+  EntryOffset :=
+    EntriesField;
+
+  WriteLn;
+  WriteLn('--- FIRST ENTRY ---');
+
+  WriteLn(
+    'entryId=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        EntryOffset
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'name=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        EntryOffset + 4
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'text=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        EntryOffset + 8
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'mapMarkerReference=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        EntryOffset + 12
+      ),
+      8
+    )
+  );
+
+  DumpRequirement(
+    Data,
+    EntryOffset + 16,
+    'knowledgeRequirement'
+  );
+
+  DumpRequirement(
+    Data,
+    EntryOffset + 28,
+    'completionRequirement'
+  );
+
+  {
+    progressStepsRequirement @40
+  }
+
+  ProgressField :=
+    EntryOffset + 40;
+
+  ProgressRelativeOffset :=
+    ReadU32(
+      Data,
+      ProgressField
+    );
+
+  ProgressCount :=
+    ReadU32(
+      Data,
+      ProgressField + 4
+    );
+
+  WriteLn(
+    'progressStepsRequirement count=',
+    ProgressCount
+  );
+
+  if ProgressCount > 0 then
+  begin
+    ProgressField :=
+      ProgressField +
+      ProgressRelativeOffset;
+
+    WriteLn(
+      'progressStepsRequirement offset=$',
+      IntToHex(
+        ProgressField,
+        8
+      )
+    );
+
+    DumpRequirement(
+      Data,
+      ProgressField,
+      'first progress requirement'
+    );
+  end;
+
+  WriteLn(
+    'itemIconId=$',
+    IntToHex(
+      ReadU32(
+        Data,
+        EntryOffset + 64
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'recommendedLevel=',
+    ReadU8(
+      Data,
+      EntryOffset + 68
+    )
+  );
+end;
+
 begin
   try
     Data :=
@@ -23,6 +392,9 @@ begin
         $60B5ED8A,
         0
       );
+
+    DumpFirstCollection(Data);
+
     if Length(Data) > 0 then
 begin
   F :=

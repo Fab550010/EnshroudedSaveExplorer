@@ -7,13 +7,6 @@ interface
 uses
   Classes, SysUtils;
 
-procedure DumpReflectionType(
-  const ExeFileName: string;
-  QualifiedHash: Cardinal
-);
-
-implementation
-
 type
   TPESection = record
     Name: string;
@@ -29,6 +22,22 @@ type
     Sections: TPESectionArray;
     ImageBase: QWord;
   end;
+
+procedure DumpReflectionType(
+  const ExeFileName: string;
+  QualifiedHash: Cardinal
+);
+
+procedure DumpBlobArrayElementStructOfField(
+  const PE: TPEFile;
+  ParentTypeOffset: QWord;
+  const WantedField: string;
+  const Title: string
+);
+
+implementation
+
+
 
 
 function ReadUInt16LE(
@@ -617,6 +626,8 @@ begin
   );
 end;
 
+
+
 procedure DumpStructFields(
   const PE: TPEFile;
   TypeOffset: QWord;
@@ -798,6 +809,48 @@ begin
   end;
 end;
 
+function FindTypeOffsetByHash(
+  const PE: TPEFile;
+  TableOffset: QWord;
+  TableCount: QWord;
+  QualifiedHash: Cardinal;
+  out TypeOffset: QWord
+): Boolean;
+var
+  I: QWord;
+  TypeVA: QWord;
+  CandidateOffset: QWord;
+begin
+  Result := False;
+
+  for I := 0 to TableCount - 1 do
+  begin
+    TypeVA :=
+      ReadUInt64LE(
+        PE.Data,
+        TableOffset + I * 8
+      );
+
+    if not VAToFileOffset(
+             PE,
+             TypeVA,
+             CandidateOffset
+           )
+    then
+      Continue;
+
+    if
+      ReadUInt32LE(
+        PE.Data,
+        CandidateOffset + $50
+      ) = QualifiedHash
+    then
+    begin
+      TypeOffset := CandidateOffset;
+      Exit(True);
+    end;
+  end;
+end;
 
 
 procedure DumpReflectionType(
@@ -842,6 +895,8 @@ var
   InnerPrimitiveType: Byte;
 
   J : integer;
+
+  RequirementTypeOffset: QWord;
 
 begin
   PE := LoadPEFile(ExeFileName);
@@ -962,6 +1017,48 @@ begin
       raise Exception.Create(
         'Unable to resolve struct field table'
       );
+
+    if FindTypeOffsetByHash(
+     PE,
+     TableOffset,
+     TableCount,
+     $C542456E,
+     RequirementTypeOffset
+   )
+then
+begin
+  WriteLn;
+  WriteLn('--- requirement fields ---');
+
+  WriteLn(
+    'hash=$',
+    IntToHex(
+      ReadUInt32LE(
+        PE.Data,
+        RequirementTypeOffset + $50
+      ),
+      8
+    )
+  );
+
+  WriteLn(
+    'size=',
+    ReadUInt32LE(
+      PE.Data,
+      RequirementTypeOffset + $40
+    )
+  );
+
+  DumpStructFields(
+    PE,
+    RequirementTypeOffset,
+    '  '
+  );
+end
+else
+  WriteLn(
+    'Requirement type $C542456E not found'
+  );
 
     for j := 0 to FieldCount - 1 do
     begin
@@ -1132,14 +1229,10 @@ begin
              end;
 
       end;
-      if FieldName = 'collections'
-        then begin
-             { InnerTypeOffset = type $FBEEACF5, Collection }
-             writeln('bouh');
-             {
-              Retrouver le champ "entries" et son inner type, puis dumper le type $39004D5B.
-              }
-        end;
+      if FieldName = 'collections' then
+      begin
+           DumpBlobArrayElementStructOfField(PE, InnerTypeOffset, 'entries', 'collection entry fields');
+      end;
     end;
 
 
@@ -1154,6 +1247,175 @@ begin
         8
       )
     ]
+  );
+end;
+
+procedure DumpBlobArrayElementStructOfField(
+  const PE: TPEFile;
+  ParentTypeOffset: QWord;
+  const WantedField: string;
+  const Title: string
+);
+var
+  FieldCount: Cardinal;
+  StructFieldsVA: QWord;
+  StructFieldsOffset: QWord;
+
+  J: Cardinal;
+  FieldOffset: QWord;
+
+  FieldNameVA: QWord;
+  FieldNameLen: QWord;
+  FieldName: string;
+
+  FieldTypeVA: QWord;
+  FieldTypeOffset: QWord;
+
+  ElementTypeVA: QWord;
+  ElementTypeOffset: QWord;
+begin
+  FieldCount :=
+    ReadUInt32LE(
+      PE.Data,
+      ParentTypeOffset + $48
+    );
+
+  StructFieldsVA :=
+    ReadUInt64LE(
+      PE.Data,
+      ParentTypeOffset + $58
+    );
+
+  if StructFieldsVA = 0 then
+    Exit;
+
+  if not VAToFileOffset(
+           PE,
+           StructFieldsVA,
+           StructFieldsOffset
+         )
+  then
+    raise Exception.Create(
+      'Unable to resolve struct fields'
+    );
+
+  for J := 0 to FieldCount - 1 do
+  begin
+    FieldOffset :=
+      StructFieldsOffset +
+      QWord(J) * 48;
+
+    FieldNameVA :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset
+      );
+
+    FieldNameLen :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset + 8
+      );
+
+    FieldName :=
+      ReadStringAtVA(
+        PE,
+        FieldNameVA,
+        FieldNameLen
+      );
+
+    if FieldName <> WantedField then
+      Continue;
+
+    FieldTypeVA :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset + 16
+      );
+
+    if not VAToFileOffset(
+             PE,
+             FieldTypeVA,
+             FieldTypeOffset
+           )
+    then
+      raise Exception.CreateFmt(
+        'Unable to resolve type of field %s',
+        [FieldName]
+      );
+
+    {
+      FieldTypeOffset désigne ici le BlobArray.
+      Son inner_type est le type de l'élément.
+    }
+
+    ElementTypeVA :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldTypeOffset + $38
+      );
+
+    if ElementTypeVA = 0 then
+      raise Exception.CreateFmt(
+        'Field %s has no inner type',
+        [FieldName]
+      );
+
+    if not VAToFileOffset(
+             PE,
+             ElementTypeVA,
+             ElementTypeOffset
+           )
+    then
+      raise Exception.CreateFmt(
+        'Unable to resolve inner type of field %s',
+        [FieldName]
+      );
+
+    WriteLn;
+    WriteLn('--- ', Title, ' ---');
+
+    WriteLn(
+      'hash=$',
+      IntToHex(
+        ReadUInt32LE(
+          PE.Data,
+          ElementTypeOffset + $50
+        ),
+        8
+      )
+    );
+
+    WriteLn(
+      'size=',
+      ReadUInt32LE(
+        PE.Data,
+        ElementTypeOffset + $40
+      )
+    );
+
+    WriteLn(
+      'primitive=$',
+      IntToHex(
+        PE.Data[
+          ElementTypeOffset + $4C
+        ],
+        2
+      )
+    );
+
+    DumpStructFields(
+      PE,
+      ElementTypeOffset,
+      '  '
+    );
+
+    Exit;
+  end;
+
+  raise Exception.CreateFmt(
+    'Field %s not found',
+    [WantedField]
   );
 end;
 
