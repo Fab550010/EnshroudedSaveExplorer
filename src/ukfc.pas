@@ -51,6 +51,23 @@ const
     $49, $F0, $23, $B9, $1B, $7F
   );
 
+
+function SameGuid(
+  const A, B: array of Byte
+): Boolean;
+var
+  I: Integer;
+begin
+  if Length(A) <> Length(B) then
+    Exit(False);
+
+  for I := 0 to High(A) do
+    if A[I] <> B[I] then
+      Exit(False);
+
+  Result := True;
+end;
+
 function ReadUInt32LE(
   Stream: TStream
 ): Cardinal;
@@ -157,6 +174,125 @@ begin
   end;
 end;
 
+function ExtractKFCResource(
+  const KFCFileName: string;
+  const ResourcesFileName: string;
+  const ResourceGuid: string;
+  TypeHash: Cardinal;
+  PartIndex: Cardinal
+): TBytes;
+var
+  Stream: TFileStream;
+  Header: TKFCHeader;
+  Guid: array[0..15] of Byte;
+  EntryTypeHash: Cardinal;
+  EntryPartIndex: Cardinal;
+  I: Cardinal;
+  ResourceIndex: Integer;
+  Resource: TKFCResourceEntry;
+begin
+  SetLength(Result, 0);
+
+  Stream :=
+    TFileStream.Create(
+      KFCFileName,
+      fmOpenRead or fmShareDenyNone
+    );
+
+  try
+    Header :=
+      ReadKFCHeader(Stream);
+
+    WriteLn(
+      'Resource keys: offset=$',
+      IntToHex(Header.ResourceKeys.Offset, 8),
+      ' count=',
+      Header.ResourceKeys.Count
+    );
+
+    WriteLn(
+      'Resource values: offset=$',
+      IntToHex(Header.ResourceValues.Offset, 8),
+      ' count=',
+      Header.ResourceValues.Count
+    );
+
+    WriteLn(
+      'Resource chunks: offset=$',
+      IntToHex(Header.ResourceChunks.Offset, 8),
+      ' count=',
+      Header.ResourceChunks.Count
+    );
+
+    ResourceIndex := -1;
+
+    Stream.Position :=
+      Header.ResourceKeys.Offset;
+
+    for I := 0 to Header.ResourceKeys.Count - 1 do
+    begin
+      Stream.ReadBuffer(
+        Guid[0],
+        SizeOf(Guid)
+      );
+
+      EntryTypeHash :=
+        ReadUInt32LE(Stream);
+
+      EntryPartIndex :=
+        ReadUInt32LE(Stream);
+
+      { reserved_0 }
+      ReadUInt32LE(Stream);
+
+      { reserved_1 }
+      ReadUInt32LE(Stream);
+
+      if
+        SameGuid(Guid, JOURNAL_GUID) and
+        (EntryTypeHash = TypeHash) and
+        (EntryPartIndex = PartIndex)
+      then
+      begin
+        ResourceIndex := I;
+        Break;
+      end;
+    end;
+
+    if ResourceIndex < 0 then
+      raise Exception.Create(
+        'JournalRegistryResource not found'
+      );
+
+    WriteLn(
+      'Resource found at index ',
+      ResourceIndex
+    );
+
+    Stream.Position :=
+      Header.ResourceValues.Offset +
+      Int64(ResourceIndex) * 8;
+
+    Resource.Offset :=
+      ReadUInt32LE(Stream);
+
+    Resource.Size :=
+      ReadUInt32LE(Stream);
+
+    WriteLn(
+      'Resource offset=$',
+      IntToHex(Resource.Offset, 8),
+      ' size=',
+      Resource.Size,
+      ' ($',
+      IntToHex(Resource.Size, 8),
+      ')'
+    );
+
+  finally
+    Stream.Free;
+  end;
+end;
 
 
 end.
