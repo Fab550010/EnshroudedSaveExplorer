@@ -285,27 +285,6 @@ begin
     Header :=
       ReadKFCHeader(Stream);
 
-    WriteLn(
-      'Resource keys: offset=$',
-      IntToHex(Header.ResourceKeys.Offset, 8),
-      ' count=',
-      Header.ResourceKeys.Count
-    );
-
-    WriteLn(
-      'Resource values: offset=$',
-      IntToHex(Header.ResourceValues.Offset, 8),
-      ' count=',
-      Header.ResourceValues.Count
-    );
-
-    WriteLn(
-      'Resource chunks: offset=$',
-      IntToHex(Header.ResourceChunks.Offset, 8),
-      ' count=',
-      Header.ResourceChunks.Count
-    );
-
     ResourceIndex := -1;
 
     Stream.Position :=
@@ -346,11 +325,6 @@ begin
         'JournalRegistryResource not found'
       );
 
-    WriteLn(
-      'Resource found at index ',
-      ResourceIndex
-    );
-
     Stream.Position :=
       Header.ResourceValues.Offset +
       Int64(ResourceIndex) * 8;
@@ -360,16 +334,6 @@ begin
 
     Resource.Size :=
       ReadUInt32LE(Stream);
-
-    WriteLn(
-      'Resource offset=$',
-      IntToHex(Resource.Offset, 8),
-      ' size=',
-      Resource.Size,
-      ' ($',
-      IntToHex(Resource.Size, 8),
-      ')'
-    );
 
     Chunks :=
   ReadResourceChunks(
@@ -381,12 +345,7 @@ ResourceEnd :=
   QWord(Resource.Offset) +
   Resource.Size;
 
-WriteLn(
-  'Resource range=$',
-  IntToHex(Resource.Offset, 8),
-  '..$',
-  IntToHex(ResourceEnd, 8)
-);
+
 
 for I := 0 to High(Chunks) do
 begin
@@ -439,10 +398,6 @@ begin
       Resource.Size
     );
 
-    WriteLn(
-      'Extracted resource bytes: ',
-      Length(Result)
-    );
 
     Exit;
   finally
