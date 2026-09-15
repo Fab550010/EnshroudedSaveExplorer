@@ -3,7 +3,7 @@ object MainForm: TMainForm
   Height = 565
   Top = 459
   Width = 891
-  Caption = 'MainForm'
+  Caption = 'EnshroudedSaveExplorer'
   ClientHeight = 565
   ClientWidth = 891
   LCLVersion = '4.8.0.0'
