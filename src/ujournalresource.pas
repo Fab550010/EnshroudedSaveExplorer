@@ -127,7 +127,112 @@ procedure ParseJournalQuests(
   out Quests: TJournalQuestArray
 );
 
+function JournalQuestSourceText(
+  Value: TJournalQuestSource
+): string;
+
+function JournalQuestTypeText(
+  Value: TJournalQuestType
+): string;
+
+function JournalCompareOperatorText(
+  Value: TJournalCompareOperator
+): string;
+
+function JournalRequirementTypeText(
+  Value: TJournalRequirementType
+): string;
+
 implementation
+
+function JournalQuestSourceText(
+  Value: TJournalQuestSource
+): string;
+begin
+  case Value of
+    jqsNone:                 Result := 'None';
+    jqsFlame:                Result := 'Flame';
+    jqsBlacksmith:           Result := 'Blacksmith';
+    jqsAlchemist:            Result := 'Alchemist';
+    jqsHuntress:             Result := 'Huntress';
+    jqsFarmer:               Result := 'Farmer';
+    jqsCarpenter:            Result := 'Carpenter';
+    jqsCryptKeeper:          Result := 'CryptKeeper';
+    jqsBard:                 Result := 'Bard';
+    jqsChineseNewYearTrader: Result := 'ChineseNewYearTrader';
+    jqsBarber:               Result := 'Barber';
+    jqsFisher:               Result := 'Fisher';
+    jqsAncientResearcher:    Result := 'AncientResearcher';
+    jqsGrassland:            Result := 'Grassland';
+    jqsDeepforest:           Result := 'Deepforest';
+    jqsSteppes:              Result := 'Steppes';
+    jqsDesert:               Result := 'Desert';
+    jqsColdHeights:          Result := 'ColdHeights';
+    jqsWetlands:             Result := 'Wetlands';
+  else
+    Result := 'Unknown';
+  end;
+end;
+
+function JournalQuestTypeText(
+  Value: TJournalQuestType
+): string;
+begin
+  case Value of
+    jqtAuto:
+      Result := 'Auto';
+
+    jqtWorldQuest:
+      Result := 'WorldQuest';
+
+    jqtPlayerQuest:
+      Result := 'PlayerQuest';
+
+  else
+    Result := 'Unknown';
+  end;
+end;
+
+function JournalCompareOperatorText(
+  Value: TJournalCompareOperator
+): string;
+begin
+  case Value of
+    jcoGreaterThan:
+      Result := 'GreaterThan';
+
+    jcoLessThan:
+      Result := 'LessThan';
+
+    jcoEquals:
+      Result := 'Equals';
+
+  else
+    Result := 'Unknown';
+  end;
+end;
+
+function JournalRequirementTypeText(
+  Value: TJournalRequirementType
+): string;
+begin
+  case Value of
+    jrtExtern:
+      Result := 'Extern';
+
+    jrtSimpleBool:
+      Result := 'SimpleBool';
+
+    jrtSimpleCount:
+      Result := 'SimpleCount';
+
+    jrtSimpleFlag:
+      Result := 'SimpleFlag';
+
+  else
+    Result := 'Unknown';
+  end;
+end;
 
 function DecodeQuestSource(
   Value: Byte

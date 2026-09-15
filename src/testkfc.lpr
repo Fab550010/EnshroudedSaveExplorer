@@ -478,14 +478,18 @@ begin
   );
 
   WriteLn(
-    'First quest source=',
+  'First quest source=',
+  JournalQuestSourceText(
     Quests[0].Source
-  );
+  )
+);
 
-  WriteLn(
-    'First quest type=',
+WriteLn(
+  'First quest type=',
+  JournalQuestTypeText(
     Quests[0].QuestType
-  );
+  )
+);
 
   WriteLn(
     'First quest unlockForAllPlayers=',
