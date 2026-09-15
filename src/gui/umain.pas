@@ -54,6 +54,7 @@ type
     FSaveFileStamp: LongInt;
     FSaveFileSize: Int64;
     FRefreshingSave: Boolean;
+    FGamePath: string;
     procedure LoadTestJournal;
     procedure LoadTestLocalization;
     procedure PopulateQuestGrid;
@@ -66,8 +67,7 @@ type
   end;
 
 const
-  TEST_LOCALIZATION_FILE = 'E:\SteamLibrary\steamapps\common\Enshrouded\enshrouded_016.dat';
-  TEST_LOCALIZATION_SEED = $3F95ABE0;
+    TEST_LOCALIZATION_SEED = $3F95ABE0;
 
 var
   MainForm: TMainForm;
@@ -619,7 +619,6 @@ end;
 
 procedure TMainForm.LoadTestJournal;
 var
-  GamePath: string;
   KFCFileName: string;
   KFCResourcesFileName: string;
 
@@ -637,22 +636,17 @@ begin
   FLoreSortColumn := 0;
   FLoreSortAscending := True;
 
-  {
-    Temporairement, on déduit le répertoire du jeu
-    depuis le fichier de localisation déjà connu.
-  }
-  GamePath :=
-    ExtractFilePath(
-      TEST_LOCALIZATION_FILE
-    );
-
   KFCFileName :=
-    GamePath +
-    'enshrouded.kfc';
+  IncludeTrailingPathDelimiter(
+    FGamePath
+  ) +
+  'enshrouded.kfc';
 
-  KFCResourcesFileName :=
-    GamePath +
-    'enshrouded.kfc_resources';
+KFCResourcesFileName :=
+  IncludeTrailingPathDelimiter(
+    FGamePath
+  ) +
+  'enshrouded.kfc_resources';
 
   Data :=
     ExtractKFCResource(
@@ -681,19 +675,32 @@ begin
 end;
 
 procedure TMainForm.LoadTestLocalization;
+var
+  LocalizationFileName: string;
 begin
-  SetLength(FLocalization, 0);
+  SetLength(
+    FLocalization,
+    0
+  );
+
+  LocalizationFileName :=
+    IncludeTrailingPathDelimiter(
+      FGamePath
+    ) +
+    'enshrouded_016.dat';
 
   if not LoadLocalizationTable(
-           TEST_LOCALIZATION_FILE,
+           LocalizationFileName,
            TEST_LOCALIZATION_SEED,
            FLocalization
-         ) then
+         )
+  then
     raise Exception.CreateFmt(
       'Unable to load localization table from %s',
-      [TEST_LOCALIZATION_FILE]
+      [LocalizationFileName]
     );
 end;
+
 
 procedure TMainForm.PopulateQuestGrid();
 var
@@ -899,8 +906,42 @@ procedure TMainForm.FormCreate(
 var
   CharactersFileName: string;
 begin
-  LoadTestJournal;
-  LoadTestLocalization;
+  if not FindEnshroudedInstallPath(
+           FGamePath
+         )
+  then
+  begin
+    ShowMessage(
+      'Unable to locate the Enshrouded installation.'
+    );
+
+    Exit;
+  end;
+
+  try
+    LoadTestJournal;
+    LoadTestLocalization;
+  except
+    on E: Exception do
+    begin
+      ShowMessage(
+        'Unable to load Enshrouded game data:' +
+        LineEnding +
+        E.Message
+      );
+
+      Exit;
+    end;
+  end;
+
+  FRefreshingSave := False;
+
+  if not FindEnshroudedCharactersIndex(
+           FIndexFileName
+         )
+  then
+    Exit;
+
   FRefreshingSave := False;
 
   if not FindEnshroudedCharactersIndex(FIndexFileName)
