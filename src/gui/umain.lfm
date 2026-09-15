@@ -74,7 +74,6 @@ object MainForm: TMainForm
         Top = 36
         Width = 883
         Align = alClient
-        ColCount = 4
         Columns = <        
           item
             Title.Caption = 'Name'
@@ -83,6 +82,9 @@ object MainForm: TMainForm
           item
             Title.Caption = 'Type'
             Width = 128
+          end        
+          item
+            Title.Caption = 'Source'
           end        
           item
             Title.Caption = 'Status'

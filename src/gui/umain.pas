@@ -380,7 +380,7 @@ function CompareJournalMetadata(
 begin
   case SortColumn of
 
-    // Name -> Type -> Status
+    // Name
     0:
       begin
         Result := CompareText(A.Name, B.Name);
@@ -389,34 +389,41 @@ begin
           Result := CompareText(A.RawType, B.RawType);
 
         if Result = 0 then
-          Result := CompareQuestStatus(
-            A.PersonalStatus,
-            B.PersonalStatus
-          );
+          Result := CompareText(A.Source, B.Source);
       end;
 
-    // Type -> Status -> Name
+    // Type
     1:
       begin
         Result := CompareText(A.RawType, B.RawType);
 
         if Result = 0 then
-          Result := CompareQuestStatus(
-            A.PersonalStatus,
-            B.PersonalStatus
-          );
+          Result := CompareText(A.Source, B.Source);
 
         if Result = 0 then
           Result := CompareText(A.Name, B.Name);
       end;
 
-    // Status -> Type -> Name
+    // Source
     2:
       begin
-        Result := CompareQuestStatus(
-          A.PersonalStatus,
-          B.PersonalStatus
-        );
+        Result := CompareText(A.Source, B.Source);
+
+        if Result = 0 then
+          Result := CompareText(A.RawType, B.RawType);
+
+        if Result = 0 then
+          Result := CompareText(A.Name, B.Name);
+      end;
+
+    // Status
+    3:
+      begin
+        Result :=
+          CompareQuestStatus(
+            A.PersonalStatus,
+            B.PersonalStatus
+          );
 
         if Result = 0 then
           Result := CompareText(A.RawType, B.RawType);
@@ -426,13 +433,14 @@ begin
       end;
 
     // ID
-    3:
+    4:
       Result := CompareCardinal(A.ID, B.ID);
 
   else
     Result := 0;
   end;
 end;
+
 
 procedure SortJournalMetadata(
   var Metadata: TJournalObjectMetadataArray;
@@ -830,8 +838,9 @@ begin
 
       QuestGrid.Cells[0, Row] := Metadata[I].Name;
       QuestGrid.Cells[1, Row] := Metadata[I].RawType;
-      QuestGrid.Cells[2, Row] := StatusText;
-      QuestGrid.Cells[3, Row] :=
+      QuestGrid.Cells[2, Row] := Metadata[I].Source;
+      QuestGrid.Cells[3, Row] := StatusText;
+      QuestGrid.Cells[4, Row] :=
         '$' + IntToHex(Metadata[I].ID, 8);
 
       Inc(Row);
