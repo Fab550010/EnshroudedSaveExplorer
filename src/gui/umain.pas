@@ -6,8 +6,9 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
-  Grids, uKnowledgeBlob, uKnowledge, fpjson, jsonparser, uJournalEvaluator,
-  uLocalization, USaveIndex, uSteamDiscovery, ucharacterdata, uBDB;
+  Grids, uKnowledgeBlob, uKnowledge, fpjson, uJournalEvaluator,
+  uLocalization, USaveIndex, uSteamDiscovery, ucharacterdata, uBDB,
+  uKFC, uJournalResource, uJournalJSON;
 
 type
 
@@ -65,7 +66,6 @@ type
   end;
 
 const
-  TEST_JOURNAL_FILE = 'E:\EnshroudedSaveExplorer\extracted_data\JournalRegistryResource\33701b26-ec1d-423f-8e06-49f023b91b7f_60b5ed8a_0.json';
   TEST_LOCALIZATION_FILE = 'E:\SteamLibrary\steamapps\common\Enshrouded\enshrouded_016.dat';
   TEST_LOCALIZATION_SEED = $3F95ABE0;
 
@@ -619,27 +619,65 @@ end;
 
 procedure TMainForm.LoadTestJournal;
 var
-  Stream: TFileStream;
+  GamePath: string;
+  KFCFileName: string;
+  KFCResourcesFileName: string;
+
+  Data: TBytes;
+
+  Quests: TJournalQuestArray;
+  Collections: TJournalCollectionArray;
 begin
   FSortColumn := 0;
   FSortAscending := True;
+
   FJournalRoot.Free;
   FJournalRoot := nil;
+
   FLoreSortColumn := 0;
   FLoreSortAscending := True;
 
-  Stream :=
-    TFileStream.Create(
-      TEST_JOURNAL_FILE,
-      fmOpenRead or fmShareDenyNone
+  {
+    Temporairement, on déduit le répertoire du jeu
+    depuis le fichier de localisation déjà connu.
+  }
+  GamePath :=
+    ExtractFilePath(
+      TEST_LOCALIZATION_FILE
     );
 
-  try
-    FJournalRoot :=
-      GetJSON(Stream);
-  finally
-    Stream.Free;
-  end;
+  KFCFileName :=
+    GamePath +
+    'enshrouded.kfc';
+
+  KFCResourcesFileName :=
+    GamePath +
+    'enshrouded.kfc_resources';
+
+  Data :=
+    ExtractKFCResource(
+      KFCFileName,
+      KFCResourcesFileName,
+      '33701b26-ec1d-423f-8e06-49f023b91b7f',
+      $60B5ED8A,
+      0
+    );
+
+  ParseJournalQuests(
+    Data,
+    Quests
+  );
+
+  ParseJournalCollections(
+    Data,
+    Collections
+  );
+
+  FJournalRoot :=
+    BuildJournalJSON(
+      Quests,
+      Collections
+    );
 end;
 
 procedure TMainForm.LoadTestLocalization;
