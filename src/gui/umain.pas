@@ -55,8 +55,8 @@ type
     FSaveFileSize: Int64;
     FRefreshingSave: Boolean;
     FGamePath: string;
-    procedure LoadTestJournal;
-    procedure LoadTestLocalization;
+    procedure LoadJournal;
+    procedure LoadLocalization;
     procedure PopulateQuestGrid;
     procedure PopulateLoreGrid;
     procedure LoadCharactersFile(const Filename : string);
@@ -625,7 +625,7 @@ begin
   end;
 end;
 
-procedure TMainForm.LoadTestJournal;
+procedure TMainForm.LoadJournal;
 var
   KFCFileName: string;
   KFCResourcesFileName: string;
@@ -682,7 +682,7 @@ KFCResourcesFileName :=
     );
 end;
 
-procedure TMainForm.LoadTestLocalization;
+procedure TMainForm.LoadLocalization;
 var
   SearchRec: TSearchRec;
   CandidateFileName: string;
@@ -987,8 +987,8 @@ begin
   end;
 
   try
-    LoadTestJournal;
-    LoadTestLocalization;
+    LoadJournal;
+    LoadLocalization;
   except
     on E: Exception do
     begin
