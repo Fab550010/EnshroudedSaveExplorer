@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
   Grids, uKnowledgeBlob, uKnowledge, fpjson, uJournalEvaluator,
   uLocalization, USaveIndex, uSteamDiscovery, ucharacterdata, uBDB,
-  uKFC, uJournalResource, uJournalJSON;
+  uKFC, uJournalResource, uJournalJSON, Types;
 
 type
 
@@ -40,6 +40,7 @@ type
     procedure LoreGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure QuestsFilterChange(Sender: TObject);
     procedure SaveRefreshTimerTimer(Sender: TObject);
+    procedure GridMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -78,6 +79,48 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+procedure TMainForm.GridMouseWheel(
+  Sender: TObject;
+  Shift: TShiftState;
+  WheelDelta: Integer;
+  MousePos: TPoint;
+  var Handled: Boolean
+);
+const
+  ROWS_PER_WHEEL_STEP = 5;
+var
+  Grid: TStringGrid;
+  NewTopRow: Integer;
+begin
+  if not (Sender is TStringGrid) then
+    Exit;
+
+  Grid := TStringGrid(Sender);
+
+  NewTopRow := Grid.TopRow;
+
+  if WheelDelta > 0 then
+    Dec(
+      NewTopRow,
+      ROWS_PER_WHEEL_STEP
+    )
+  else if WheelDelta < 0 then
+    Inc(
+      NewTopRow,
+      ROWS_PER_WHEEL_STEP
+    );
+
+  if NewTopRow < Grid.FixedRows then
+    NewTopRow := Grid.FixedRows;
+
+  if NewTopRow >= Grid.RowCount then
+    NewTopRow := Grid.RowCount - 1;
+
+  Grid.TopRow := NewTopRow;
+
+  Handled := True;
+end;
 
 function TMainForm.GetSaveFileSize(
   const FileName: string

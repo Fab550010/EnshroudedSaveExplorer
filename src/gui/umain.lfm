@@ -99,6 +99,7 @@ object MainForm: TMainForm
         RowCount = 2
         TabOrder = 0
         OnHeaderClick = QuestGridHeaderClick
+        OnMouseWheel = GridMouseWheel
       end
       object QuestsControlPanel: TPanel
         Left = 0
@@ -170,6 +171,7 @@ object MainForm: TMainForm
         RowCount = 1
         TabOrder = 0
         OnHeaderClick = LoreGridHeaderClick
+        OnMouseWheel = GridMouseWheel
       end
       object LoreControlPanel: TPanel
         Left = 0
