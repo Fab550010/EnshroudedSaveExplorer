@@ -617,6 +617,187 @@ begin
   );
 end;
 
+procedure DumpStructFields(
+  const PE: TPEFile;
+  TypeOffset: QWord;
+  const Prefix: string
+);
+var
+  FieldCount: Cardinal;
+  StructFieldsVA: QWord;
+  StructFieldsOffset: QWord;
+
+  J: Cardinal;
+  FieldOffset: QWord;
+
+  FieldNameVA: QWord;
+  FieldNameLen: QWord;
+  FieldName: string;
+
+  FieldTypeVA: QWord;
+  FieldTypeOffset: QWord;
+  FieldDataOffset: QWord;
+
+  FieldTypeHash: Cardinal;
+  FieldTypeSize: Cardinal;
+  FieldPrimitive: Byte;
+
+  InnerTypeVA: QWord;
+  InnerTypeOffset: QWord;
+  InnerHash: Cardinal;
+  InnerSize: Cardinal;
+  InnerPrimitive: Byte;
+begin
+  FieldCount :=
+    ReadUInt32LE(
+      PE.Data,
+      TypeOffset + $48
+    );
+
+  StructFieldsVA :=
+    ReadUInt64LE(
+      PE.Data,
+      TypeOffset + $58
+    );
+
+  if StructFieldsVA = 0 then
+    Exit;
+
+  if not VAToFileOffset(
+           PE,
+           StructFieldsVA,
+           StructFieldsOffset
+         )
+  then
+    raise Exception.Create(
+      'Unable to resolve struct fields'
+    );
+
+  for J := 0 to FieldCount - 1 do
+  begin
+    FieldOffset :=
+      StructFieldsOffset +
+      QWord(J) * 48;
+
+    FieldNameVA :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset
+      );
+
+    FieldNameLen :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset + 8
+      );
+
+    FieldName :=
+      ReadStringAtVA(
+        PE,
+        FieldNameVA,
+        FieldNameLen
+      );
+
+    FieldTypeVA :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset + 16
+      );
+
+    FieldDataOffset :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldOffset + 24
+      );
+
+    if not VAToFileOffset(
+             PE,
+             FieldTypeVA,
+             FieldTypeOffset
+           )
+    then
+      raise Exception.CreateFmt(
+        'Unable to resolve type of field %s',
+        [FieldName]
+      );
+
+    FieldTypeHash :=
+      ReadUInt32LE(
+        PE.Data,
+        FieldTypeOffset + $50
+      );
+
+    FieldTypeSize :=
+      ReadUInt32LE(
+        PE.Data,
+        FieldTypeOffset + $40
+      );
+
+    FieldPrimitive :=
+      PE.Data[
+        FieldTypeOffset + $4C
+      ];
+
+    WriteLn(
+      Prefix,
+      J,
+      ': ',
+      FieldName,
+      ' @',
+      FieldDataOffset,
+      ' hash=$',
+      IntToHex(FieldTypeHash, 8),
+      ' size=',
+      FieldTypeSize,
+      ' primitive=$',
+      IntToHex(FieldPrimitive, 2)
+    );
+
+    InnerTypeVA :=
+      ReadUInt64LE(
+        PE.Data,
+        FieldTypeOffset + $38
+      );
+
+    if
+      (InnerTypeVA <> 0) and
+      VAToFileOffset(
+        PE,
+        InnerTypeVA,
+        InnerTypeOffset
+      )
+    then
+    begin
+      InnerHash :=
+        ReadUInt32LE(
+          PE.Data,
+          InnerTypeOffset + $50
+        );
+
+      InnerSize :=
+        ReadUInt32LE(
+          PE.Data,
+          InnerTypeOffset + $40
+        );
+
+      InnerPrimitive :=
+        PE.Data[
+          InnerTypeOffset + $4C
+        ];
+
+      WriteLn(
+        Prefix,
+        '    inner hash=$',
+        IntToHex(InnerHash, 8),
+        ' size=',
+        InnerSize,
+        ' primitive=$',
+        IntToHex(InnerPrimitive, 2)
+      );
+    end;
+  end;
+end;
+
 procedure DumpReflectionType(
   const ExeFileName: string;
   QualifiedHash: Cardinal
@@ -855,7 +1036,7 @@ begin
       WriteLn;
       WriteLn(
         'FIELD ',
-        I,
+        J,
         ': ',
         FieldName
       );
@@ -927,6 +1108,20 @@ begin
           IntToHex(InnerPrimitiveType, 2)
         );
       end;
+      if
+  (FieldName = 'quests') or
+  (FieldName = 'collections')
+then
+begin
+  WriteLn;
+  WriteLn('--- ', FieldName, ' element fields ---');
+
+  DumpStructFields(
+    PE,
+    InnerTypeOffset,
+    '  '
+  );
+end;
     end;
 
 
