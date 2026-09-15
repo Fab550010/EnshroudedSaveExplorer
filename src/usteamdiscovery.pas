@@ -12,6 +12,10 @@ function FindEnshroudedCharactersIndex(
   out IndexFileName: string
 ): Boolean;
 
+function FindEnshroudedInstallPath(
+  out InstallPath: string
+): Boolean;
+
 implementation
 
 uses
@@ -495,6 +499,153 @@ begin
   }
   if FindLocalCharactersIndex(
        IndexFileName
+     )
+  then
+    Exit(True);
+end;
+
+function FindEnshroudedInLibrary(
+  const LibraryPath: string;
+  out InstallPath: string
+): Boolean;
+var
+  ManifestFileName: string;
+begin
+  Result := False;
+  InstallPath := '';
+
+  ManifestFileName :=
+    IncludeTrailingPathDelimiter(
+      LibraryPath
+    ) +
+    'steamapps' +
+    PathDelim +
+    'appmanifest_' +
+    ENSHROUDED_APP_ID +
+    '.acf';
+
+  if not FileExists(ManifestFileName) then
+    Exit;
+
+  InstallPath :=
+    IncludeTrailingPathDelimiter(
+      LibraryPath
+    ) +
+    'steamapps' +
+    PathDelim +
+    'common' +
+    PathDelim +
+    'Enshrouded';
+
+  Result :=
+    DirectoryExists(
+      InstallPath
+    );
+
+  if not Result then
+    InstallPath := '';
+end;
+
+function FindEnshroudedFromLibraryFolders(
+  const SteamPath: string;
+  out InstallPath: string
+): Boolean;
+var
+  FileName: string;
+  Lines: TStringList;
+  I: Integer;
+  KeyText: string;
+  ValueText: string;
+  LibraryPath: string;
+begin
+  Result := False;
+  InstallPath := '';
+
+  FileName :=
+    IncludeTrailingPathDelimiter(
+      SteamPath
+    ) +
+    'steamapps' +
+    PathDelim +
+    'libraryfolders.vdf';
+
+  if not FileExists(FileName) then
+    Exit;
+
+  Lines := TStringList.Create;
+
+  try
+    Lines.LoadFromFile(FileName);
+
+    for I := 0 to Lines.Count - 1 do
+    begin
+      KeyText :=
+        GetQuotedValue(
+          Trim(Lines[I]),
+          0
+        );
+
+      if not SameText(KeyText, 'path') then
+        Continue;
+
+      ValueText :=
+        GetQuotedValue(
+          Trim(Lines[I]),
+          1
+        );
+
+      if ValueText = '' then
+        Continue;
+
+      LibraryPath :=
+        StringReplace(
+          ValueText,
+          '\\',
+          '\',
+          [rfReplaceAll]
+        );
+
+      if FindEnshroudedInLibrary(
+           LibraryPath,
+           InstallPath
+         )
+      then
+        Exit(True);
+    end;
+
+  finally
+    Lines.Free;
+  end;
+end;
+
+function FindEnshroudedInstallPath(
+  out InstallPath: string
+): Boolean;
+var
+  SteamPath: string;
+begin
+  Result := False;
+  InstallPath := '';
+
+  if not FindSteamPath(SteamPath) then
+    Exit;
+
+  {
+    Steam's own library first.
+  }
+  if FindEnshroudedInLibrary(
+       SteamPath,
+       InstallPath
+     )
+  then
+    Exit(True);
+
+  {
+    Then secondary Steam libraries.
+  }
+  if FindEnshroudedFromLibraryFolders(
+       SteamPath,
+       InstallPath
      )
   then
     Exit(True);

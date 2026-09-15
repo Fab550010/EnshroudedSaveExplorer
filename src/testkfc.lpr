@@ -8,7 +8,7 @@ uses
   {$ENDIF}
   Classes
   { you can add units after this }, SysUtils, uKFC, uReflection,
-  uJournalResource, uJournalJSON, fpjson, uJournalEvaluator;
+  uJournalResource, uJournalJSON, fpjson, uJournalEvaluator, uSteamDiscovery;
 
 var
   Data: TBytes;
@@ -23,6 +23,7 @@ var
   LoreCount: Integer;
   TutorialCount: Integer;
   I: Integer;
+  InstallPath: string;
 
   function ReadU32(
     const Data: TBytes;
@@ -394,6 +395,20 @@ begin
 end;
 
 begin
+
+  if FindEnshroudedInstallPath(
+     InstallPath
+   )
+then
+  WriteLn(
+    'Enshrouded install path: ',
+    InstallPath
+  )
+else
+  WriteLn(
+    'Enshrouded install path not found'
+  );
+
   try
     Data :=
       ExtractKFCResource(
