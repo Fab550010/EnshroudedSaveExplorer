@@ -32,6 +32,11 @@ function ZSTD_getErrorName(
 
 function DecompressZstd(const Data: TBytes): TBytes;
 
+function DecompressZstdKnownSize(
+  const Data: TBytes;
+  ExpectedSize: SizeUInt
+): TBytes;
+
 implementation
 
 const
@@ -82,6 +87,61 @@ begin
     );
 
   SetLength(Result, ResultSize);
+end;
+
+function DecompressZstdKnownSize(
+  const Data: TBytes;
+  ExpectedSize: SizeUInt
+): TBytes;
+var
+  ResultSize: SizeUInt;
+begin
+  SetLength(Result, 0);
+
+  if Length(Data) = 0 then
+    Exit;
+
+  if ExpectedSize = 0 then
+    Exit;
+
+  SetLength(
+    Result,
+    ExpectedSize
+  );
+
+  ResultSize :=
+    ZSTD_decompress(
+      @Result[0],
+      ExpectedSize,
+      @Data[0],
+      Length(Data)
+    );
+
+  if ZSTD_isError(ResultSize) <> 0 then
+    raise Exception.CreateFmt(
+      'ZSTD error: %s',
+      [
+        string(
+          ZSTD_getErrorName(
+            ResultSize
+          )
+        )
+      ]
+    );
+
+  if ResultSize <> ExpectedSize then
+    raise Exception.CreateFmt(
+      'Unexpected ZSTD decompressed size: got %d, expected %d',
+      [
+        ResultSize,
+        ExpectedSize
+      ]
+    );
+
+  SetLength(
+    Result,
+    ResultSize
+  );
 end;
 
 end.

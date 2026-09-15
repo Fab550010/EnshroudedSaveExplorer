@@ -234,9 +234,10 @@ begin
   );
 
   Result :=
-    DecompressZstd(
-      CompressedData
-    );
+  DecompressZstdKnownSize(
+    CompressedData,
+    Chunk.UncompressedSize
+  );
 
   if Length(Result) <> Chunk.UncompressedSize then
     raise Exception.CreateFmt(
