@@ -2,20 +2,20 @@ object MainForm: TMainForm
   Left = 2615
   Height = 565
   Top = 459
-  Width = 891
+  Width = 943
   Caption = 'EnshroudedSaveExplorer'
   ClientHeight = 565
-  ClientWidth = 891
+  ClientWidth = 943
   LCLVersion = '4.8.0.0'
   OnCreate = FormCreate
   object TopPanel: TPanel
     Left = 0
     Height = 80
     Top = 0
-    Width = 891
+    Width = 943
     Align = alTop
     ClientHeight = 80
-    ClientWidth = 891
+    ClientWidth = 943
     TabOrder = 0
     object OpenSaveButton: TButton
       Left = 384
@@ -59,20 +59,20 @@ object MainForm: TMainForm
     Left = 0
     Height = 485
     Top = 80
-    Width = 891
-    ActivePage = QuestTabSheet
+    Width = 943
+    ActivePage = LoreTabSheet
     Align = alClient
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 1
     object QuestTabSheet: TTabSheet
       Caption = 'Quests'
       ClientHeight = 457
-      ClientWidth = 883
+      ClientWidth = 935
       object QuestGrid: TStringGrid
         Left = 0
         Height = 421
         Top = 36
-        Width = 883
+        Width = 935
         Align = alClient
         Columns = <        
           item
@@ -104,13 +104,13 @@ object MainForm: TMainForm
         Left = 0
         Height = 36
         Top = 0
-        Width = 883
+        Width = 935
         Align = alTop
         ClientHeight = 36
-        ClientWidth = 883
+        ClientWidth = 935
         TabOrder = 1
         object QuestsSummaryLabel: TLabel
-          Left = 795
+          Left = 847
           Height = 34
           Top = 1
           Width = 87
@@ -140,12 +140,12 @@ object MainForm: TMainForm
     object LoreTabSheet: TTabSheet
       Caption = 'Lore'
       ClientHeight = 457
-      ClientWidth = 883
+      ClientWidth = 935
       object LoreGrid: TStringGrid
         Left = 0
         Height = 421
         Top = 36
-        Width = 883
+        Width = 935
         Align = alClient
         ColCount = 4
         Columns = <        
@@ -175,10 +175,10 @@ object MainForm: TMainForm
         Left = 0
         Height = 36
         Top = 0
-        Width = 883
+        Width = 935
         Align = alTop
         ClientHeight = 36
-        ClientWidth = 883
+        ClientWidth = 935
         TabOrder = 1
         object LoreStatusFilterComboBox: TComboBox
           Left = 8
@@ -199,7 +199,7 @@ object MainForm: TMainForm
           OnChange = LoreFilterChange
         end
         object LoreSummaryLabel: TLabel
-          Left = 804
+          Left = 856
           Height = 34
           Top = 1
           Width = 78

@@ -16,6 +16,7 @@ function FindEnshroudedInstallPath(
   out InstallPath: string
 ): Boolean;
 
+
 implementation
 
 uses

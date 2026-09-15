@@ -684,29 +684,88 @@ end;
 
 procedure TMainForm.LoadTestLocalization;
 var
-  LocalizationFileName: string;
+  SearchRec: TSearchRec;
+  CandidateFileName: string;
+
+  CandidateItems: TLocalizationItems;
+  BestItems: TLocalizationItems;
+
+  BestFileName: string;
 begin
-  SetLength(
-    FLocalization,
-    0
-  );
+  SetLength(FLocalization, 0);
+  SetLength(BestItems, 0);
 
-  LocalizationFileName :=
-    IncludeTrailingPathDelimiter(
-      FGamePath
-    ) +
-    'enshrouded_016.dat';
+  BestFileName := '';
 
-  if not LoadLocalizationTable(
-           LocalizationFileName,
-           TEST_LOCALIZATION_SEED,
-           FLocalization
-         )
+  if FindFirst(
+       IncludeTrailingPathDelimiter(FGamePath) +
+       'enshrouded_*.dat',
+       faAnyFile,
+       SearchRec
+     ) <> 0
   then
     raise Exception.CreateFmt(
-      'Unable to load localization table from %s',
-      [LocalizationFileName]
+      'No Enshrouded .dat files found in %s',
+      [FGamePath]
     );
+
+  try
+    repeat
+      if
+        (SearchRec.Attr and faDirectory) <> 0
+      then
+        Continue;
+
+      CandidateFileName :=
+        IncludeTrailingPathDelimiter(
+          FGamePath
+        ) +
+        SearchRec.Name;
+
+      SetLength(
+        CandidateItems,
+        0
+      );
+
+      if LoadLocalizationTable(
+           CandidateFileName,
+           TEST_LOCALIZATION_SEED,
+           CandidateItems
+         )
+      then
+      begin
+        {
+          If more than one .dat happens to contain
+          a plausible table at this offset, keep the
+          one containing the most localization entries.
+        }
+        if
+          Length(CandidateItems) >
+          Length(BestItems)
+        then
+        begin
+          BestItems :=
+            CandidateItems;
+
+          BestFileName :=
+            CandidateFileName;
+        end;
+      end;
+
+    until FindNext(SearchRec) <> 0;
+
+  finally
+    FindClose(SearchRec);
+  end;
+
+  if BestFileName = '' then
+    raise Exception.CreateFmt(
+      'Unable to locate the Enshrouded localization table in %s',
+      [FGamePath]
+    );
+
+  FLocalization :=
+    BestItems;
 end;
 
 
