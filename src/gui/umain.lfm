@@ -111,17 +111,16 @@ object MainForm: TMainForm
         ClientWidth = 935
         TabOrder = 1
         object QuestsSummaryLabel: TLabel
-          Left = 847
-          Height = 34
-          Top = 1
+          Left = 448
+          Height = 15
+          Top = 8
           Width = 87
-          Align = alRight
           Caption = 'No quest loaded'
         end
         object QuestsStatusFilterComboBox: TComboBox
-          Left = 8
+          Left = 760
           Height = 23
-          Top = 8
+          Top = 0
           Width = 168
           ItemHeight = 15
           ItemIndex = 0
@@ -136,6 +135,15 @@ object MainForm: TMainForm
           Text = 'All statuses'
           OnChange = QuestsFilterChange
         end
+      end
+      object QuestSearchEdit: TEdit
+        Left = 8
+        Height = 23
+        Top = 8
+        Width = 152
+        TabOrder = 2
+        Text = 'QuestSearchEdit'
+        OnChange = SearchEditChange
       end
     end
     object LoreTabSheet: TTabSheet
@@ -183,7 +191,7 @@ object MainForm: TMainForm
         ClientWidth = 935
         TabOrder = 1
         object LoreStatusFilterComboBox: TComboBox
-          Left = 8
+          Left = 808
           Height = 23
           Top = 8
           Width = 100
@@ -201,14 +209,22 @@ object MainForm: TMainForm
           OnChange = LoreFilterChange
         end
         object LoreSummaryLabel: TLabel
-          Left = 856
-          Height = 34
-          Top = 1
+          Left = 456
+          Height = 15
+          Top = 8
           Width = 78
-          Align = alRight
           Alignment = taCenter
           Caption = 'No lore loaded'
         end
+      end
+      object LoreSearchEdit: TEdit
+        Left = 8
+        Height = 23
+        Top = 8
+        Width = 152
+        TabOrder = 2
+        Text = 'LoreSearchEdit'
+        OnChange = SearchEditChange
       end
     end
   end

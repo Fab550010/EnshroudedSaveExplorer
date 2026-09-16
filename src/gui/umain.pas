@@ -16,6 +16,8 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    LoreSearchEdit: TEdit;
+    QuestSearchEdit: TEdit;
     QuestsStatusFilterComboBox: TComboBox;
     QuestsSummaryLabel: TLabel;
     LoreSummaryLabel: TLabel;
@@ -41,6 +43,7 @@ type
     procedure QuestsFilterChange(Sender: TObject);
     procedure SaveRefreshTimerTimer(Sender: TObject);
     procedure GridMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure SearchEditChange(Sender: TObject);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -122,6 +125,11 @@ begin
   Handled := True;
 end;
 
+procedure TMainForm.SearchEditChange(Sender: TObject);
+begin
+
+end;
+
 function TMainForm.GetSaveFileSize(
   const FileName: string
 ): Int64;
@@ -159,8 +167,6 @@ var
   BestIndex: Integer;
 begin
   FSaveFileName := FileName;
-
-  Caption := FSaveFileName;
 
   FOwners :=
     ListKnowledgeOwners(
@@ -936,6 +942,9 @@ begin
         StatusText := 'Unknown';
       end;
 
+      if (QuestSearchEdit.Text <> '') and (Pos(LowerCase(QuestSearchEdit.Text), LowerCase(Metadata[I].Name) ) = 0)
+         then Continue;
+
       QuestGrid.RowCount := Row + 1;
 
       QuestGrid.Cells[0, Row] := Metadata[I].Name;
@@ -1152,6 +1161,9 @@ begin
       else
         StatusText := 'Unknown';
       end;
+
+      if (LoreSearchEdit.Text <> '') and (Pos(LowerCase(LoreSearchEdit.Text), LowerCase(Metadata[I].Name) ) = 0)
+         then Continue;
 
       LoreGrid.RowCount := Row + 1;
 
