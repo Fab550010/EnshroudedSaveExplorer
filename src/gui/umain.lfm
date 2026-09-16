@@ -2,20 +2,20 @@ object MainForm: TMainForm
   Left = 2615
   Height = 565
   Top = 459
-  Width = 943
+  Width = 933
   Caption = 'EnshroudedSaveExplorer'
   ClientHeight = 565
-  ClientWidth = 943
+  ClientWidth = 933
   LCLVersion = '4.8.0.0'
   OnCreate = FormCreate
   object TopPanel: TPanel
     Left = 0
     Height = 44
     Top = 0
-    Width = 943
+    Width = 933
     Align = alTop
     ClientHeight = 44
-    ClientWidth = 943
+    ClientWidth = 933
     TabOrder = 0
     object OpenSaveButton: TButton
       Left = 760
@@ -66,7 +66,7 @@ object MainForm: TMainForm
     Left = 0
     Height = 521
     Top = 44
-    Width = 943
+    Width = 933
     ActivePage = LoreTabSheet
     Align = alClient
     TabIndex = 1
@@ -74,12 +74,12 @@ object MainForm: TMainForm
     object QuestTabSheet: TTabSheet
       Caption = 'Quests'
       ClientHeight = 493
-      ClientWidth = 935
+      ClientWidth = 925
       object QuestGrid: TStringGrid
         Left = 0
         Height = 457
         Top = 36
-        Width = 935
+        Width = 925
         Align = alClient
         Columns = <        
           item
@@ -109,15 +109,16 @@ object MainForm: TMainForm
         OnHeaderClick = QuestGridHeaderClick
         OnMouseWheel = GridMouseWheel
         OnPrepareCanvas = QuestGridPrepareCanvas
+        OnResize = GridResize
       end
       object QuestsControlPanel: TPanel
         Left = 0
         Height = 36
         Top = 0
-        Width = 935
+        Width = 925
         Align = alTop
         ClientHeight = 36
-        ClientWidth = 935
+        ClientWidth = 925
         TabOrder = 1
         object QuestsSummaryLabel: TLabel
           Left = 256
@@ -158,18 +159,18 @@ object MainForm: TMainForm
     object LoreTabSheet: TTabSheet
       Caption = 'Lore'
       ClientHeight = 493
-      ClientWidth = 935
+      ClientWidth = 925
       object LoreGrid: TStringGrid
         Left = 0
         Height = 457
         Top = 36
-        Width = 935
+        Width = 925
         Align = alClient
         ColCount = 4
         Columns = <        
           item
             Title.Caption = 'Name'
-            Width = 512
+            Width = 573
           end        
           item
             Title.Caption = 'Progress'
@@ -191,15 +192,16 @@ object MainForm: TMainForm
         OnHeaderClick = LoreGridHeaderClick
         OnMouseWheel = GridMouseWheel
         OnPrepareCanvas = LoreGridPrepareCanvas
+        OnResize = GridResize
       end
       object LoreControlPanel: TPanel
         Left = 0
         Height = 36
         Top = 0
-        Width = 935
+        Width = 925
         Align = alTop
         ClientHeight = 36
-        ClientWidth = 935
+        ClientWidth = 925
         TabOrder = 1
         object LoreStatusFilterComboBox: TComboBox
           Left = 808

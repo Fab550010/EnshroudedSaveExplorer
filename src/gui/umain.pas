@@ -37,6 +37,7 @@ type
     TopPanel: TPanel;
     procedure CharacterComboBoxChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure GridResize(Sender: TObject);
     procedure LoreFilterChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
@@ -74,6 +75,8 @@ type
     function GetSaveFileSize(const FileName: string): Int64;
     procedure RestoreGridState(Grid: TStringGrid; OldTopRow: Integer; const SelectedID: string);
     function GetSelectedGridID(Grid: TStringGrid; IDColumn: Integer): string;
+    procedure ResizeQuestColumns;
+    procedure ResizeLoreColumns;
   public
     destructor Destroy; override;
   end;
@@ -90,6 +93,70 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+procedure TMainForm.ResizeQuestColumns;
+const
+  TYPE_WIDTH   = 110;
+  SOURCE_WIDTH = 120;
+  STATUS_WIDTH = 190;
+  ID_WIDTH     = 95;
+  MARGIN       = 24;
+  MIN_NAME_WIDTH = 200;
+var
+  NameWidth: Integer;
+begin
+  NameWidth :=
+    QuestGrid.ClientWidth
+    - TYPE_WIDTH
+    - SOURCE_WIDTH
+    - STATUS_WIDTH
+    - ID_WIDTH
+    - MARGIN;
+
+  if NameWidth < MIN_NAME_WIDTH then
+    NameWidth := MIN_NAME_WIDTH;
+
+  QuestGrid.ColWidths[0] := NameWidth;
+  QuestGrid.ColWidths[1] := TYPE_WIDTH;
+  QuestGrid.ColWidths[2] := SOURCE_WIDTH;
+  QuestGrid.ColWidths[3] := STATUS_WIDTH;
+  QuestGrid.ColWidths[4] := ID_WIDTH;
+end;
+
+procedure TMainForm.ResizeLoreColumns;
+const
+  PROGRESS_WIDTH = 90;
+  STATUS_WIDTH   = 120;
+  ID_WIDTH       = 95;
+  MARGIN         = 24;
+  MIN_NAME_WIDTH = 200;
+var
+  NameWidth: Integer;
+begin
+  NameWidth :=
+    LoreGrid.ClientWidth
+    - PROGRESS_WIDTH
+    - STATUS_WIDTH
+    - ID_WIDTH
+    - MARGIN;
+
+  if NameWidth < MIN_NAME_WIDTH then
+    NameWidth := MIN_NAME_WIDTH;
+
+  LoreGrid.ColWidths[0] := NameWidth;
+  LoreGrid.ColWidths[1] := PROGRESS_WIDTH;
+  LoreGrid.ColWidths[2] := STATUS_WIDTH;
+  LoreGrid.ColWidths[3] := ID_WIDTH;
+end;
+
+procedure TMainForm.GridResize(Sender: TObject);
+begin
+  if Sender = QuestGrid then
+    ResizeQuestColumns
+  else if Sender = LoreGrid then
+    ResizeLoreColumns;
+end;
+
 
 function TMainForm.GetSelectedGridID(
   Grid: TStringGrid;
@@ -1324,6 +1391,8 @@ begin
         E.Message
       );
   end;
+  ResizeQuestColumns;
+  ResizeLoreColumns;
 end;
 
 procedure TMainForm.LoreFilterChange(Sender: TObject);
