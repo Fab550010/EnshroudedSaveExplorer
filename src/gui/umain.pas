@@ -68,6 +68,8 @@ type
     procedure LoadCharactersFile(const Filename : string);
     procedure RefreshSaveIfNeeded;
     function GetSaveFileSize(const FileName: string): Int64;
+    procedure RestoreGridState(Grid: TStringGrid; OldTopRow: Integer; const SelectedID: string);
+    function GetSelectedGridID(Grid: TStringGrid; IDColumn: Integer): string;
   public
     destructor Destroy; override;
   end;
@@ -84,6 +86,74 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+function TMainForm.GetSelectedGridID(
+  Grid: TStringGrid;
+  IDColumn: Integer
+): string;
+begin
+  Result := '';
+
+  if Grid.Row < Grid.FixedRows then
+    Exit;
+
+  if Grid.Row >= Grid.RowCount then
+    Exit;
+
+  Result :=
+    Grid.Cells[
+      IDColumn,
+      Grid.Row
+    ];
+end;
+
+procedure TMainForm.RestoreGridState(
+  Grid: TStringGrid;
+  OldTopRow: Integer;
+  const SelectedID: string
+);
+var
+  I: Integer;
+  IDColumn: Integer;
+begin
+  if Grid = QuestGrid then
+    IDColumn := 4
+  else if Grid = LoreGrid then
+    IDColumn := 3
+  else
+    Exit;
+
+  {
+    Restore selected logical object.
+  }
+  if SelectedID <> '' then
+  begin
+    for I := Grid.FixedRows to Grid.RowCount - 1 do
+    begin
+      if Grid.Cells[IDColumn, I] = SelectedID then
+      begin
+        Grid.Row := I;
+        Break;
+      end;
+    end;
+  end;
+
+  {
+    Restore viewport position, clamped to the
+    rebuilt grid.
+  }
+  if Grid.RowCount <= Grid.FixedRows then
+    Exit;
+
+  if OldTopRow < Grid.FixedRows then
+    OldTopRow := Grid.FixedRows;
+
+  if OldTopRow >= Grid.RowCount then
+    OldTopRow := Grid.RowCount - 1;
+
+  Grid.TopRow := OldTopRow;
+end;
+
 
 procedure TMainForm.UpdateQuestSortIndicator;
 const
@@ -695,6 +765,10 @@ var
   CharactersFileName: string;
   NewStamp: LongInt;
   NewSize: Int64;
+  QuestTopRow: Integer;
+  LoreTopRow: Integer;
+  SelectedQuestID: string;
+  SelectedLoreID: string;
 begin
   if FRefreshingSave then
     Exit;
@@ -727,9 +801,15 @@ begin
         (NewSize <> FSaveFileSize)
       then
       begin
-        LoadCharactersFile(
-          CharactersFileName
-        );
+        QuestTopRow := QuestGrid.TopRow;
+        LoreTopRow := LoreGrid.TopRow;
+        SelectedQuestID := GetSelectedGridID(QuestGrid, 4);
+        SelectedLoreID := GetSelectedGridID(LoreGrid, 3);
+
+        LoadCharactersFile(CharactersFileName);
+
+        RestoreGridState(QuestGrid, QuestTopRow, SelectedQuestID);
+        RestoreGridState(LoreGrid, LoreTopRow, SelectedLoreID);
 
         FSaveFileStamp := NewStamp;
         FSaveFileSize := NewSize;
