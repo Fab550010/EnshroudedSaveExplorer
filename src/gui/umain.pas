@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
   Grids, uKnowledgeBlob, uKnowledge, fpjson, uJournalEvaluator,
   uLocalization, USaveIndex, uSteamDiscovery, ucharacterdata, uBDB,
-  uKFC, uJournalResource, uJournalJSON, Types;
+  uKFC, uJournalResource, uJournalJSON, Types, LCLIntf;
 
 type
 
@@ -40,6 +40,7 @@ type
     procedure GridResize(Sender: TObject);
     procedure LoreFilterChange(Sender: TObject);
     procedure OpenSaveButtonClick(Sender: TObject);
+    procedure GridDblClick(Sender: TObject);
     procedure QuestGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure LoreGridHeaderClick(Sender: TObject; IsColumn: Boolean; Index: Integer);
     procedure QuestsFilterChange(Sender: TObject);
@@ -77,6 +78,7 @@ type
     function GetSelectedGridID(Grid: TStringGrid; IDColumn: Integer): string;
     procedure ResizeQuestColumns;
     procedure ResizeLoreColumns;
+    function StripWikiTitleTags(const S: string): string;
   public
     destructor Destroy; override;
   end;
@@ -93,6 +95,85 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+function TMainForm.StripWikiTitleTags(
+  const S: string
+): string;
+var
+  I: Integer;
+  InTag: Boolean;
+begin
+  Result := '';
+  InTag := False;
+
+  for I := 1 to Length(S) do
+  begin
+    if S[I] = '<' then
+    begin
+      InTag := True;
+      Continue;
+    end;
+
+    if S[I] = '>' then
+    begin
+      InTag := False;
+      Continue;
+    end;
+
+    if not InTag then
+      Result := Result + S[I];
+  end;
+
+  Result := Trim(Result);
+end;
+
+procedure TMainForm.GridDblClick(Sender: TObject);
+var
+  Grid: TStringGrid;
+  Title: string;
+  WikiTitle: string;
+  URL: string;
+begin
+  if not (Sender is TStringGrid) then
+    Exit;
+
+  Grid := TStringGrid(Sender);
+
+  if Grid.Row < Grid.FixedRows then
+    Exit;
+
+  if Grid.Row >= Grid.RowCount then
+    Exit;
+
+  Title :=
+    StripWikiTitleTags(
+      Grid.Cells[0, Grid.Row]
+    );
+
+  if Title = '' then
+    Exit;
+
+  WikiTitle :=
+    StringReplace(
+      Title,
+      ' ',
+      '_',
+      [rfReplaceAll]
+    );
+
+  if Grid = QuestGrid then
+    URL :=
+      'https://enshrouded.wiki.gg/wiki/Quests/' +
+      WikiTitle
+  else if Grid = LoreGrid then
+    URL :=
+      'https://enshrouded.wiki.gg/wiki/Lore/' +
+      WikiTitle
+  else
+    Exit;
+
+  OpenURL(URL);
+end;
 
 procedure TMainForm.ResizeQuestColumns;
 const
@@ -1394,6 +1475,8 @@ begin
   ResizeQuestColumns;
   ResizeLoreColumns;
 end;
+
+
 
 procedure TMainForm.LoreFilterChange(Sender: TObject);
 begin
