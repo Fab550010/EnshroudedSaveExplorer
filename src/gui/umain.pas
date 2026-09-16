@@ -44,6 +44,8 @@ type
     procedure SaveRefreshTimerTimer(Sender: TObject);
     procedure GridMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure SearchEditChange(Sender: TObject);
+    procedure QuestGridPrepareCanvas(Sender: TObject; aCol, aRow: Integer; aState: TGridDrawState);
+    procedure LoreGridPrepareCanvas(Sender: TObject; aCol, aRow: Integer; aState: TGridDrawState);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -155,6 +157,60 @@ begin
   Grid.TopRow := OldTopRow;
 end;
 
+
+procedure TMainForm.QuestGridPrepareCanvas(
+  Sender: TObject;
+  aCol, aRow: Integer;
+  aState: TGridDrawState
+);
+var
+  Status: string;
+begin
+  if aRow < QuestGrid.FixedRows then
+    Exit;
+
+  if aCol <> 3 then
+    Exit;
+
+  if gdSelected in aState then
+    Exit;
+
+  Status := QuestGrid.Cells[aCol, aRow];
+
+  if Status = 'Completed personally' then
+    QuestGrid.Canvas.Brush.Color := RGBToColor(225, 245, 225)
+  else if Status = 'Resolved - origin unknown' then
+    QuestGrid.Canvas.Brush.Color := RGBToColor(255, 245, 210)
+  else if Status = 'Not completed' then
+    QuestGrid.Canvas.Brush.Color := RGBToColor(245, 245, 245);
+end;
+
+procedure TMainForm.LoreGridPrepareCanvas(
+  Sender: TObject;
+  aCol, aRow: Integer;
+  aState: TGridDrawState
+);
+var
+  Status: string;
+begin
+  if aRow < LoreGrid.FixedRows then
+    Exit;
+
+  if aCol <> 2 then
+    Exit;
+
+  if gdSelected in aState then
+    Exit;
+
+  Status := LoreGrid.Cells[aCol, aRow];
+
+  if Status = 'Complete' then
+    LoreGrid.Canvas.Brush.Color := RGBToColor(225, 245, 225)
+  else if Status = 'Partial' then
+    LoreGrid.Canvas.Brush.Color := RGBToColor(255, 245, 210)
+  else if Status = 'Undiscovered' then
+    LoreGrid.Canvas.Brush.Color := RGBToColor(245, 245, 245);
+end;
 
 procedure TMainForm.UpdateQuestSortIndicator;
 const

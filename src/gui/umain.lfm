@@ -60,9 +60,9 @@ object MainForm: TMainForm
     Height = 485
     Top = 80
     Width = 943
-    ActivePage = QuestTabSheet
+    ActivePage = LoreTabSheet
     Align = alClient
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 1
     object QuestTabSheet: TTabSheet
       Caption = 'Quests'
@@ -101,6 +101,7 @@ object MainForm: TMainForm
         TabOrder = 0
         OnHeaderClick = QuestGridHeaderClick
         OnMouseWheel = GridMouseWheel
+        OnPrepareCanvas = QuestGridPrepareCanvas
       end
       object QuestsControlPanel: TPanel
         Left = 0
@@ -182,6 +183,7 @@ object MainForm: TMainForm
         TabOrder = 0
         OnHeaderClick = LoreGridHeaderClick
         OnMouseWheel = GridMouseWheel
+        OnPrepareCanvas = LoreGridPrepareCanvas
       end
       object LoreControlPanel: TPanel
         Left = 0
