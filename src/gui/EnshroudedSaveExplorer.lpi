@@ -19,7 +19,7 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <MinorVersionNr Value="1"/>
-      <StringTable CompanyName="Fabrice" FileDescription="EnshroudedSaveExplorer" InternalName="EnshroudedSaveExplorer" LegalCopyright="Copyright © 2026 Fabrice P." OriginalFilename="EnshroudedSaveExplorer" ProductName="EnshroudedSaveExplorer" ProductVersion="1.0.0"/>
+      <StringTable CompanyName="Fabrice" FileDescription="EnshroudedSaveExplorer" InternalName="EnshroudedSaveExplorer" LegalCopyright="Copyright © 2026 Fabrice P." OriginalFilename="EnshroudedSaveExplorer.exe" ProductName="EnshroudedSaveExplorer" ProductVersion="0.1.0"/>
     </VersionInfo>
     <BuildModes>
       <Item Name="Default" Default="True"/>
