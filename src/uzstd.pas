@@ -7,28 +7,26 @@ interface
 uses
   SysUtils;
 
-const
-  ZSTD_DLL = 'libzstd.dll';
 
 function ZSTD_getFrameContentSize(
   Src: Pointer;
   SrcSize: SizeUInt
-): QWord; cdecl; external ZSTD_DLL;
+): QWord; cdecl; external;
 
 function ZSTD_decompress(
   Dst: Pointer;
   DstCapacity: SizeUInt;
   Src: Pointer;
   CompressedSize: SizeUInt
-): SizeUInt; cdecl; external ZSTD_DLL;
+): SizeUInt; cdecl; external;
 
 function ZSTD_isError(
   Code: SizeUInt
-): LongWord; cdecl; external ZSTD_DLL;
+): LongWord; cdecl; external;
 
 function ZSTD_getErrorName(
   Code: SizeUInt
-): PAnsiChar; cdecl; external ZSTD_DLL;
+): PAnsiChar; cdecl; external;
 
 function DecompressZstd(const Data: TBytes): TBytes;
 
@@ -38,6 +36,10 @@ function DecompressZstdKnownSize(
 ): TBytes;
 
 implementation
+
+{$linklib libzstd.a}
+{$linklib ucrt}
+{$linklib msvcrt}
 
 const
   ZSTD_CONTENTSIZE_UNKNOWN = QWord(-1);
