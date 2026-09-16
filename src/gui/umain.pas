@@ -16,6 +16,7 @@ type
 
   TMainForm = class(TForm)
     CharacterComboBox: TComboBox;
+    CharacterLabel: TLabel;
     LoreSearchEdit: TEdit;
     QuestSearchEdit: TEdit;
     QuestsStatusFilterComboBox: TComboBox;
@@ -394,15 +395,7 @@ begin
 
       ParseKnowledgeBlob(KnowBlob, Knowledge);
 
-    CharacterComboBox.Items.Add(
-      Format(
-        '%s (%d KNOW entries)',
-        [
-          CharacterName,
-          Length(Knowledge)
-        ]
-      )
-    );
+    CharacterComboBox.Items.Add(CharacterName);
 
   end;
 

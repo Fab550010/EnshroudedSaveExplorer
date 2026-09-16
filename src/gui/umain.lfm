@@ -10,19 +10,19 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   object TopPanel: TPanel
     Left = 0
-    Height = 80
+    Height = 44
     Top = 0
     Width = 943
     Align = alTop
-    ClientHeight = 80
+    ClientHeight = 44
     ClientWidth = 943
     TabOrder = 0
     object OpenSaveButton: TButton
-      Left = 384
+      Left = 760
       Height = 25
       Top = 8
-      Width = 128
-      Caption = 'Open Characters File'
+      Width = 160
+      Caption = 'Open save file...'
       TabOrder = 0
       OnClick = OpenSaveButtonClick
     end
@@ -45,7 +45,7 @@ object MainForm: TMainForm
       Visible = False
     end
     object CharacterComboBox: TComboBox
-      Left = 568
+      Left = 96
       Height = 23
       Top = 8
       Width = 230
@@ -54,11 +54,18 @@ object MainForm: TMainForm
       TabOrder = 2
       OnChange = CharacterComboBoxChange
     end
+    object CharacterLabel: TLabel
+      Left = 24
+      Height = 15
+      Top = 14
+      Width = 57
+      Caption = 'Character: '
+    end
   end
   object MainPageControl: TPageControl
     Left = 0
-    Height = 485
-    Top = 80
+    Height = 521
+    Top = 44
     Width = 943
     ActivePage = LoreTabSheet
     Align = alClient
@@ -66,11 +73,11 @@ object MainForm: TMainForm
     TabOrder = 1
     object QuestTabSheet: TTabSheet
       Caption = 'Quests'
-      ClientHeight = 457
+      ClientHeight = 493
       ClientWidth = 935
       object QuestGrid: TStringGrid
         Left = 0
-        Height = 421
+        Height = 457
         Top = 36
         Width = 935
         Align = alClient
@@ -150,11 +157,11 @@ object MainForm: TMainForm
     end
     object LoreTabSheet: TTabSheet
       Caption = 'Lore'
-      ClientHeight = 457
+      ClientHeight = 493
       ClientWidth = 935
       object LoreGrid: TStringGrid
         Left = 0
-        Height = 421
+        Height = 457
         Top = 36
         Width = 935
         Align = alClient
