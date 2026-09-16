@@ -59,6 +59,7 @@ type
     FSaveFileSize: Int64;
     FRefreshingSave: Boolean;
     FGamePath: string;
+    FCurrentOwnerID: Cardinal;
     procedure UpdateQuestSortIndicator;
     procedure UpdateLoreSortIndicator;
     procedure LoadJournal;
@@ -705,6 +706,27 @@ begin
   QuickSort(0, High(Metadata));
 end;
 
+function SameKnowledge(
+  const A, B: TKnowledgeItems
+): Boolean;
+var
+  I: Integer;
+begin
+  if Length(A) <> Length(B) then
+    Exit(False);
+
+  for I := 0 to High(A) do
+  begin
+    if A[I].ID <> B[I].ID then
+      Exit(False);
+
+    if A[I].Value <> B[I].Value then
+      Exit(False);
+  end;
+
+  Result := True;
+end;
+
 procedure TMainForm.QuestGridHeaderClick(
   Sender: TObject;
   IsColumn: Boolean;
@@ -1150,6 +1172,7 @@ procedure TMainForm.CharacterComboBoxChange(Sender: TObject);
 var
   Blob: TBytes;
   OwnerID: Cardinal;
+  NewKnowledge: TKnowledgeItems;
 begin
   if CharacterComboBox.ItemIndex < 0 then
     Exit;
@@ -1170,8 +1193,15 @@ begin
 
   ParseKnowledgeBlob(
     Blob,
-    FKnowledge
+    NewKnowledge
   );
+
+  if (OwnerID = FCurrentOwnerID) and SameKnowledge(FKnowledge,NewKnowledge)
+  then
+      Exit;
+
+  FCurrentOwnerID := OwnerID;
+  FKnowledge := NewKnowledge;
 
   PopulateQuestGrid;
   PopulateLoreGrid;
@@ -1183,6 +1213,7 @@ procedure TMainForm.FormCreate(
 var
   CharactersFileName: string;
 begin
+     FCurrentOwnerID := 0;
   if not FindEnshroudedInstallPath(
            FGamePath
          )
