@@ -6,6 +6,7 @@ object MainForm: TMainForm
   Caption = 'EnshroudedSaveExplorer'
   ClientHeight = 565
   ClientWidth = 933
+  Constraints.MinWidth = 600
   LCLVersion = '4.8.0.0'
   OnCreate = FormCreate
   object TopPanel: TPanel
@@ -22,6 +23,7 @@ object MainForm: TMainForm
       Height = 25
       Top = 8
       Width = 160
+      Anchors = [akTop, akRight]
       Caption = 'Open save file...'
       TabOrder = 0
       OnClick = OpenSaveButtonClick
@@ -132,6 +134,7 @@ object MainForm: TMainForm
           Height = 23
           Top = 0
           Width = 168
+          Anchors = [akTop, akRight]
           ItemHeight = 15
           ItemIndex = 0
           Items.Strings = (
@@ -208,6 +211,7 @@ object MainForm: TMainForm
           Height = 23
           Top = 8
           Width = 100
+          Anchors = [akTop, akRight]
           ItemHeight = 15
           ItemIndex = 0
           Items.Strings = (

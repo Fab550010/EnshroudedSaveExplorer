@@ -96,11 +96,11 @@ implementation
 
 procedure TMainForm.ResizeQuestColumns;
 const
-  TYPE_WIDTH   = 110;
-  SOURCE_WIDTH = 120;
-  STATUS_WIDTH = 190;
-  ID_WIDTH     = 95;
-  MARGIN       = 24;
+  TYPE_WIDTH     = 110;
+  SOURCE_WIDTH   = 120;
+  STATUS_WIDTH   = 190;
+  ID_WIDTH       = 95;
+  BORDER_MARGIN  = 4;
   MIN_NAME_WIDTH = 200;
 var
   NameWidth: Integer;
@@ -111,7 +111,7 @@ begin
     - SOURCE_WIDTH
     - STATUS_WIDTH
     - ID_WIDTH
-    - MARGIN;
+    - BORDER_MARGIN;
 
   if NameWidth < MIN_NAME_WIDTH then
     NameWidth := MIN_NAME_WIDTH;
@@ -128,7 +128,7 @@ const
   PROGRESS_WIDTH = 90;
   STATUS_WIDTH   = 120;
   ID_WIDTH       = 95;
-  MARGIN         = 24;
+  BORDER_MARGIN  = 4;
   MIN_NAME_WIDTH = 200;
 var
   NameWidth: Integer;
@@ -138,7 +138,7 @@ begin
     - PROGRESS_WIDTH
     - STATUS_WIDTH
     - ID_WIDTH
-    - MARGIN;
+    - BORDER_MARGIN;
 
   if NameWidth < MIN_NAME_WIDTH then
     NameWidth := MIN_NAME_WIDTH;
