@@ -59,6 +59,8 @@ type
     FSaveFileSize: Int64;
     FRefreshingSave: Boolean;
     FGamePath: string;
+    procedure UpdateQuestSortIndicator;
+    procedure UpdateLoreSortIndicator;
     procedure LoadJournal;
     procedure LoadLocalization;
     procedure PopulateQuestGrid;
@@ -82,6 +84,65 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+procedure TMainForm.UpdateQuestSortIndicator;
+const
+  COLUMN_NAMES: array[0..4] of string = (
+    'Name',
+    'Type',
+    'Source',
+    'Status',
+    'ID'
+  );
+var
+  I: Integer;
+begin
+  for I := 0 to High(COLUMN_NAMES) do
+    QuestGrid.Columns[I].Title.Caption :=
+      COLUMN_NAMES[I];
+
+  if
+    (FSortColumn >= 0) and
+    (FSortColumn <= High(COLUMN_NAMES))
+  then
+  begin
+    if FSortAscending then
+      QuestGrid.Columns[FSortColumn].Title.Caption :=
+        COLUMN_NAMES[FSortColumn] + ' ▲'
+    else
+      QuestGrid.Columns[FSortColumn].Title.Caption :=
+        COLUMN_NAMES[FSortColumn] + ' ▼';
+  end;
+end;
+
+procedure TMainForm.UpdateLoreSortIndicator;
+const
+  COLUMN_NAMES: array[0..3] of string = (
+    'Name',
+    'Progress',
+    'Status',
+    'ID'
+  );
+var
+  I: Integer;
+begin
+  for I := 0 to High(COLUMN_NAMES) do
+    LoreGrid.Columns[I].Title.Caption :=
+      COLUMN_NAMES[I];
+
+  if
+    (FLoreSortColumn >= 0) and
+    (FLoreSortColumn <= High(COLUMN_NAMES))
+  then
+  begin
+    if FLoreSortAscending then
+      LoreGrid.Columns[FLoreSortColumn].Title.Caption :=
+        COLUMN_NAMES[FLoreSortColumn] + ' ▲'
+    else
+      LoreGrid.Columns[FLoreSortColumn].Title.Caption :=
+        COLUMN_NAMES[FLoreSortColumn] + ' ▼';
+  end;
+end;
 
 procedure TMainForm.GridMouseWheel(
   Sender: TObject;
@@ -591,6 +652,7 @@ begin
     FSortAscending := True;
   end;
 
+  UpdateQuestSortIndicator;
   PopulateQuestGrid;
 end;
 
@@ -611,6 +673,7 @@ begin
     FLoreSortAscending := True;
   end;
 
+  UpdateLoreSortIndicator;
   PopulateLoreGrid;
 end;
 
@@ -740,6 +803,9 @@ KFCResourcesFileName :=
       Quests,
       Collections
     );
+
+  UpdateQuestSortIndicator;
+  UpdateLoreSortIndicator;
 end;
 
 procedure TMainForm.LoadLocalization;
