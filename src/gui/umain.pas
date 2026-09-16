@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
   Grids, uKnowledgeBlob, uKnowledge, fpjson, uJournalEvaluator,
   uLocalization, USaveIndex, uSteamDiscovery, ucharacterdata, uBDB,
-  uKFC, uJournalResource, uJournalJSON, Types, LCLIntf;
+  uKFC, uJournalResource, uJournalJSON, Types, LCLIntf, LCLType;
 
 type
 
@@ -49,6 +49,7 @@ type
     procedure SearchEditChange(Sender: TObject);
     procedure QuestGridPrepareCanvas(Sender: TObject; aCol, aRow: Integer; aState: TGridDrawState);
     procedure LoreGridPrepareCanvas(Sender: TObject; aCol, aRow: Integer; aState: TGridDrawState);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FSaveFileName: string;
     FOwners: TOwnerIDArray;
@@ -95,6 +96,46 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+procedure TMainForm.FormKeyDown(
+  Sender: TObject;
+  var Key: Word;
+  Shift: TShiftState
+);
+var
+  SearchEdit: TEdit;
+begin
+  if MainPageControl.ActivePage = QuestTabSheet then
+    SearchEdit := QuestSearchEdit
+  else if MainPageControl.ActivePage = LoreTabSheet then
+    SearchEdit := LoreSearchEdit
+  else
+    Exit;
+
+  {
+    Ctrl+F:
+    focus the search field of the active tab.
+  }
+  if (ssCtrl in Shift) and (Key = Ord('F')) then
+  begin
+    SearchEdit.SetFocus;
+    SearchEdit.SelectAll;
+    Key := 0;
+    Exit;
+  end;
+
+  {
+    Escape:
+    clear the search field of the active tab.
+  }
+  if Key = VK_ESCAPE then
+  begin
+    if SearchEdit.Text <> '' then
+      SearchEdit.Clear;
+
+    Key := 0;
+  end;
+end;
 
 function TMainForm.StripWikiTitleTags(
   const S: string

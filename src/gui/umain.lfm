@@ -7,8 +7,10 @@ object MainForm: TMainForm
   ClientHeight = 565
   ClientWidth = 933
   Constraints.MinWidth = 600
+  KeyPreview = True
   LCLVersion = '4.8.0.0'
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   object TopPanel: TPanel
     Left = 0
     Height = 44
