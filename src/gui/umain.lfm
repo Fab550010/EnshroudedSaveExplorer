@@ -142,7 +142,7 @@ object MainForm: TMainForm
         Top = 8
         Width = 152
         TabOrder = 2
-        Text = 'QuestSearchEdit'
+        TextHint = 'Name Filter'
         OnChange = SearchEditChange
       end
     end
@@ -223,7 +223,7 @@ object MainForm: TMainForm
         Top = 8
         Width = 152
         TabOrder = 2
-        Text = 'LoreSearchEdit'
+        TextHint = 'Name Filter'
         OnChange = SearchEditChange
       end
     end

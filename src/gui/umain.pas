@@ -127,7 +127,18 @@ end;
 
 procedure TMainForm.SearchEditChange(Sender: TObject);
 begin
-
+     if Sender = QuestSearchEdit then
+     begin
+          if Length(FKnowledge) = 0 then
+             Exit;
+          PopulateQuestGrid;
+     end
+     else if Sender = LoreSearchEdit then
+     begin
+          if Length(FKnowledge) = 0 then
+             Exit;
+          PopulateLoreGrid;
+     end;
 end;
 
 function TMainForm.GetSaveFileSize(
