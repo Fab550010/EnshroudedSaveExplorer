@@ -113,7 +113,7 @@ object MainForm: TMainForm
         ClientWidth = 935
         TabOrder = 1
         object QuestsSummaryLabel: TLabel
-          Left = 448
+          Left = 256
           Height = 15
           Top = 8
           Width = 87
@@ -213,7 +213,7 @@ object MainForm: TMainForm
           OnChange = LoreFilterChange
         end
         object LoreSummaryLabel: TLabel
-          Left = 456
+          Left = 256
           Height = 15
           Top = 8
           Width = 78

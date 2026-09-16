@@ -1193,7 +1193,7 @@ begin
     end;
     QuestsSummaryLabel.Caption :=
                               Format(
-                                     'PlayerQuest %d/%d - WorldQuest %d/%d - Auto %d/%d',
+                                     'Player %d/%d   |   World %d/%d   |   Auto %d/%d',
                                      [
                                       PlayerQuestCompletedCount,
                                       PlayerQuestCount,
@@ -1433,7 +1433,7 @@ begin
     end;
     LoreSummaryLabel.Caption :=
                              Format(
-                                    'Lore: %d complete / %d partial / %d undiscovered - %d total',
+                                    'Complete %d   |   Partial %d   |   Undiscovered %d   |   Total %d',
                                     [
                                            CompleteCount,
                                            PartialCount,
